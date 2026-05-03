@@ -13,82 +13,87 @@
         
         /* Control Panel & Layer Panel Glassmorphism */
         .control-plane, .layer-plane, #app > div {
-            background: rgba(255, 255, 255, 0.7) !important;
-            backdrop-filter: blur(20px) saturate(180%) !important;
-            -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-            border: 1px solid rgba(255, 255, 255, 0.6) !important;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1) !important;
-            border-radius: 12px !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            border: 1px solid rgba(0, 0, 0, 0.08) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+            border-radius: 8px !important;
         }
         
         /* Buttons */
         .btn-xiaochi, .mybutton, button {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
-            border: none !important;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
             border-radius: 6px !important;
-            color: white !important;
-            box-shadow: 0 4px 10px rgba(79, 172, 254, 0.3) !important;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+            color: #475569 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+            transition: all 0.2s ease !important;
             font-weight: 500 !important;
         }
         .btn-xiaochi:hover, .mybutton:hover, button:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 6px 15px rgba(79, 172, 254, 0.4) !important;
-            filter: brightness(1.05) !important;
+            background: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            transform: none !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+            filter: none !important;
         }
         
         /* Inputs & Selects */
         input[type="text"], input[type="number"], select, .form-control, .form-select {
-            border-radius: 6px !important;
-            border: 1px solid rgba(0, 0, 0, 0.1) !important;
-            background: rgba(255, 255, 255, 0.8) !important;
-            padding: 8px 12px !important;
+            border-radius: 4px !important;
+            border: 1px solid #cbd5e1 !important;
+            background: #ffffff !important;
+            padding: 6px 10px !important;
             font-size: 13px !important;
-            color: #333 !important;
-            transition: all 0.3s ease !important;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02) !important;
+            color: #334155 !important;
+            transition: all 0.2s ease !important;
+            box-shadow: none !important;
         }
         input:focus, select:focus, .form-control:focus, .form-select:focus {
-            border-color: #4facfe !important;
+            border-color: #94a3b8 !important;
             outline: none !important;
-            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.2) !important;
+            box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2) !important;
             background: #fff !important;
         }
         
         /* Global Background */
         body {
-            background: #f0f4f8 !important;
+            background: #fafafa !important;
         }
         #svg-div {
             background: transparent !important;
         }
         svg {
             background: white !important;
-            border-radius: 12px !important;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.06) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.03) !important;
             margin: 20px !important;
         }
         
         /* Top UI Restyling */
         #tvbot-top-ui {
-            background: rgba(255, 255, 255, 0.8) !important;
-            backdrop-filter: blur(20px) saturate(180%) !important;
-            border: 1px solid rgba(255,255,255,0.6) !important;
-            border-radius: 12px !important;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1) !important;
-            padding: 10px 15px !important;
-            gap: 12px !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px) !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04) !important;
+            padding: 8px 12px !important;
+            gap: 10px !important;
         }
         #tvbot-back-btn {
-            background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%) !important;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            color: #475569 !important;
             border-radius: 6px !important;
-            padding: 8px 16px !important;
-            box-shadow: 0 4px 10px rgba(255, 8, 68, 0.3) !important;
-            font-weight: bold !important;
+            padding: 6px 12px !important;
+            box-shadow: none !important;
+            font-weight: 500 !important;
         }
         #tvbot-back-btn:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 6px 15px rgba(255, 8, 68, 0.4) !important;
+            background: #f1f5f9 !important;
+            transform: none !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
         }
         
         /* Tool wrappers inside Top UI */
@@ -264,19 +269,8 @@
 
         const backBtn = document.createElement('div');
         backBtn.id = 'tvbot-back-btn';
-        backBtn.innerHTML = '<i class="bi bi-arrow-left-circle"></i> Back';
-        backBtn.style.cssText = `
-            background: rgba(66, 185, 131, 0.9);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            transition: all 0.2s;
-        `;
-        backBtn.onmouseover = () => backBtn.style.background = '#3aa876';
-        backBtn.onmouseout = () => backBtn.style.background = 'rgba(66, 185, 131, 0.9)';
+        backBtn.innerText = 'Back';
+        backBtn.style.cssText = 'cursor: pointer;';
         backBtn.onclick = () => {
             if (confirm('Go back to My Trees? Any unsaved changes will be lost.')) {
                 window.location.href = '/myTrees.html';
@@ -291,16 +285,7 @@
 
         // Project Selector
         const projectWrapper = document.createElement('div');
-        projectWrapper.style.cssText = `
-            background: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            border: 2px solid #42b983;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        `;
+        projectWrapper.style.cssText = 'display: flex; align-items: center; gap: 8px;';
         
         const label = document.createElement('span');
         label.innerText = "Project:";
@@ -353,10 +338,11 @@
         });
 
         // Add "New" button to selector
-        const addBtn = document.createElement('i');
-        addBtn.className = 'bi bi-plus-circle-fill';
-        addBtn.style.color = '#42b983';
-        addBtn.style.cursor = 'pointer';
+        const addBtn = document.createElement('button');
+        addBtn.className = 'btn btn-sm btn-outline-primary';
+        addBtn.innerText = '+ New';
+        addBtn.style.height = '28px';
+        addBtn.style.padding = '0 8px';
         addBtn.title = "New Project";
         addBtn.onclick = async () => {
             const name = prompt("Enter new project name:");
@@ -370,16 +356,7 @@
         projectWrapper.appendChild(addBtn);
 
         const layoutWrapper = document.createElement('div');
-        layoutWrapper.style.cssText = `
-            background: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            border: 2px solid #42b983;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        `;
+        layoutWrapper.style.cssText = 'display: flex; align-items: center; gap: 8px;';
 
         const layoutLabel = document.createElement('span');
         layoutLabel.innerText = "Layout:";
@@ -466,16 +443,7 @@
         layoutWrapper.appendChild(layoutSelect);
 
         const annotWrapper = document.createElement('div');
-        annotWrapper.style.cssText = `
-            background: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            border: 2px solid #42b983;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        `;
+        annotWrapper.style.cssText = 'display: flex; align-items: center; gap: 8px;';
 
         const annotBtn = document.createElement('button');
         annotBtn.id = 'tvbot-annotate-toggle';
@@ -614,16 +582,7 @@
         annotWrapper.appendChild(exportLabel);
 
         const treeOpsWrapper = document.createElement('div');
-        treeOpsWrapper.style.cssText = `
-            background: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            border: 2px solid #42b983;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        `;
+        treeOpsWrapper.style.cssText = 'display: flex; align-items: center; gap: 8px;';
 
         const treeUndoBtn = document.createElement('button');
         treeUndoBtn.id = 'tvbot-tree-undo';
@@ -3228,8 +3187,8 @@
         box.style.cssText = 'padding:8px; border-bottom:1px solid #e5e7eb; background:#fff;';
 
         const title = document.createElement('div');
-        title.innerText = 'TVBOT Tools';
-        title.style.cssText = 'font-weight:700; font-size:12px; color:#374151; margin-bottom:6px;';
+        title.innerText = '树编辑器';
+        title.style.cssText = 'font-weight:700; font-size:14px; color:#374151; margin-bottom:8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;';
 
         const row1 = document.createElement('div');
         row1.style.cssText = 'display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px;';
@@ -3782,8 +3741,8 @@
         box.appendChild(rowStyle);
         box.appendChild(row3);
 
-        // Append to the end instead of inserting before
-        vertical.appendChild(box);
+        // Append to the controlContainer so it stays below the VerticalBox instead of making it wider
+        controlContainer.appendChild(box);
         refreshCheckpoints().catch(() => {});
 
         const refreshTreeOpsState = () => {
@@ -4064,7 +4023,7 @@
                     const newBtn = document.createElement('button');
                     newBtn.id = 'local-new-project-btn';
                     newBtn.className = 'btn btn-sm btn-outline-primary';
-                    newBtn.innerHTML = '<i class="bi bi-plus-lg"></i>';
+                    newBtn.innerText = '+ New';
                     newBtn.title = "Create New Project Folder";
                     newBtn.style.height = "30px";
                     newBtn.style.padding = "0 8px";
@@ -4088,7 +4047,7 @@
                     const renameBtn = document.createElement('button');
                     renameBtn.id = 'local-rename-project-btn';
                     renameBtn.className = 'btn btn-sm btn-outline-secondary';
-                    renameBtn.innerHTML = '<i class="bi bi-pencil-square"></i>';
+                    renameBtn.innerText = 'Rename';
                     renameBtn.title = "Rename Selected Project Folder";
                     renameBtn.style.height = "30px";
                     renameBtn.style.padding = "0 8px";
@@ -4122,7 +4081,7 @@
                     const delBtn = document.createElement('button');
                     delBtn.id = 'local-delete-project-btn';
                     delBtn.className = 'btn btn-sm btn-outline-danger';
-                    delBtn.innerHTML = '<i class="bi bi-trash"></i>';
+                    delBtn.innerText = 'Delete';
                     delBtn.title = "Delete Selected Project Folder";
                     delBtn.style.height = "30px";
                     delBtn.style.padding = "0 8px";
