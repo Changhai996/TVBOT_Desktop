@@ -371,7 +371,7 @@ def render_local_my_trees():
             .project-title i { color: #f59e0b; }
             
             .tree-item { 
-                padding: 1rem 1.5rem; 
+                padding: 0.5rem 1rem; 
                 border-bottom: 1px solid #f1f5f9; 
                 display: flex; 
                 justify-content: space-between; 
@@ -470,10 +470,10 @@ def render_local_my_trees():
                                     <i class="bi bi-trash"></i>
                                 </button>
                                 {% endif %}
-                                <i class="bi bi-chevron-down text-muted ms-2" id="icon-{{ project_name }}"></i>
+                                <i class="bi bi-chevron-right text-muted ms-2" id="icon-{{ project_name }}"></i>
                             </div>
                         </div>
-                        <div class="project-body" id="body-{{ project_name }}">
+                        <div class="project-body" id="body-{{ project_name }}" style="display: none;">
                             {% if trees %}
                                 {% for file in trees %}
                                 <div class="tree-item" data-name="{{ file.name }}" data-time="{{ file.mtime }}" data-html="{{ file.html }}">

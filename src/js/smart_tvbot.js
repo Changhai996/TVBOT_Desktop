@@ -90,6 +90,76 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
             padding: 6px 12px !important;
         }
+        /* Project Manager Box Title Input Width */
+        #project-manager-box input[type="text"] {
+            min-width: 500px !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+        }
+
+        /* Right Panel Compactness */
+        .control-plane {
+            padding: 10px !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        #VerticalBox {
+            max-height: calc(100vh - 120px) !important;
+            background: transparent !important;
+            border: none !important;
+        }
+        .attr_plane_box {
+            padding: 5px 8px !important;
+            max-height: calc(100vh - 120px) !important;
+        }
+        .attr_item_box {
+            height: 28px !important;
+            line-height: 28px !important;
+            margin-top: 4px !important;
+            padding: 0 2px !important;
+        }
+        .attr_type_out_box {
+            margin-top: 6px !important;
+            padding-bottom: 4px !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+        }
+        .attr_type_name {
+            height: 26px !important;
+            line-height: 26px !important;
+            font-size: 13px !important;
+        }
+        .my-form-label {
+            max-width: 130px !important;
+            font-size: 12px !important;
+        }
+        #app input, #app select {
+            min-height: 24px !important;
+            height: 24px !important;
+            line-height: 24px !important;
+            font-size: 12px !important;
+            padding: 2px 6px !important;
+        }
+        .mybutton {
+            height: 24px !important;
+            line-height: 24px !important;
+            font-size: 12px !important;
+        }
+        .mynav-horizontal .cu-item {
+            height: 32px !important;
+            line-height: 32px !important;
+            font-size: 13px !important;
+        }
+        .color_set_row {
+            margin-top: 4px !important;
+        }
+        .attr_list_box {
+            padding: 4px !important;
+        }
+        /* Reduce spacing between elements */
+        .mb-3 { margin-bottom: 0.5rem !important; }
+        .mt-3 { margin-top: 0.5rem !important; }
+        hr { margin: 0.5rem 0 !important; }
+
     `;
     const styleEl = document.createElement('style');
     styleEl.innerHTML = premiumCss;
@@ -638,19 +708,25 @@
         style.id = 'tvbot-ui-style';
         style.textContent = `
 #app input, #app select {
-  min-height: 30px !important;
-  height: 30px !important;
-  line-height: 30px !important;
+  min-height: 24px !important;
+  height: 24px !important;
+  line-height: 24px !important;
   padding-top: 0 !important;
   padding-bottom: 0 !important;
+  font-size: 12px !important;
 }
 #app input[type="text"], #app input[type="number"] {
-  font-size: 14px !important;
+  font-size: 12px !important;
 }
 #project-manager-box input, #project-manager-box select {
-  min-height: 30px !important;
-  height: 30px !important;
-  line-height: 30px !important;
+  min-height: 24px !important;
+  height: 24px !important;
+  line-height: 24px !important;
+}
+#project-manager-box input[type="text"] {
+  min-width: 500px !important;
+  font-size: 16px !important;
+  font-weight: bold !important;
 }
 `;
         document.head.appendChild(style);
