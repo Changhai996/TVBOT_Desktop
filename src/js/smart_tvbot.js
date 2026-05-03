@@ -3184,7 +3184,7 @@
 
         const box = document.createElement('div');
         box.id = 'tvbot-native-tools';
-        box.style.cssText = 'padding:8px; border-bottom:1px solid #e5e7eb; background:#fff;';
+        box.style.cssText = 'padding:12px; border-top:1px solid #e5e7eb; background:rgba(255, 255, 255, 0.95); backdrop-filter:blur(10px); margin-top: auto;';
 
         const title = document.createElement('div');
         title.innerText = '树编辑器';
