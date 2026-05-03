@@ -3182,9 +3182,18 @@
         const controlContainer = document.getElementById('control-container');
         if (!vertical || !controlContainer) return;
 
+        // Ensure VerticalBox is scrollable and does not overflow uncontrollably
+        vertical.style.overflowY = 'auto';
+
+        // Check if we are in the "layer" tab, if so, don't show the tool panel right away
+        const isLayerTab = Array.from(document.querySelectorAll('.mynav-horizontal .cu-item')).some(el => el.innerText.trim().toLowerCase() === 'layer' && el.classList.contains('cur'));
+
         const box = document.createElement('div');
         box.id = 'tvbot-native-tools';
-        box.style.cssText = 'padding:12px; border-top:1px solid #e5e7eb; background:rgba(255, 255, 255, 0.95); backdrop-filter:blur(10px); margin-top: auto;';
+        box.style.cssText = 'padding:12px; border-top:1px solid #e5e7eb; background:rgba(255, 255, 255, 0.95); backdrop-filter:blur(10px); margin-top: auto; flex-shrink: 0;';
+        if (isLayerTab) {
+            box.style.display = 'none';
+        }
 
         const title = document.createElement('div');
         title.innerText = '树编辑器';
@@ -4177,7 +4186,19 @@
         injectMainUIStyles();
         const tryInject = setInterval(() => {
             injectNativeToolsPanel();
-            if (document.getElementById('tvbot-native-tools')) clearInterval(tryInject);
+            if (document.getElementById('tvbot-native-tools')) {
+                clearInterval(tryInject);
+                
+                // Add mutation observer or click listener to toggle visibility based on active tab
+                document.body.addEventListener('click', (e) => {
+                    setTimeout(() => {
+                        const box = document.getElementById('tvbot-native-tools');
+                        if (!box) return;
+                        const isLayerTab = Array.from(document.querySelectorAll('.mynav-horizontal .cu-item')).some(el => el.innerText.trim().toLowerCase() === 'layer' && el.classList.contains('cur'));
+                        box.style.display = isLayerTab ? 'none' : 'block';
+                    }, 50);
+                });
+            }
         }, 400);
         loadPDFLibraries();
         setupExportIntercept();
