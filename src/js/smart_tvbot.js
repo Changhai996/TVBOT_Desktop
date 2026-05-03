@@ -114,19 +114,26 @@
         }
 
         /* Right Panel Compactness */
+        #control-container {
+            max-height: calc(100vh - 20px) !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+        }
         .control-plane {
             padding: 12px !important;
             display: flex !important;
             flex-direction: column !important;
         }
         #VerticalBox {
-            max-height: calc(100vh - 120px) !important;
+            max-height: none !important;
             background: transparent !important;
             border: none !important;
+            overflow-y: visible !important;
         }
         .attr_plane_box {
             padding: 8px 10px !important;
-            max-height: calc(100vh - 120px) !important;
+            max-height: none !important;
+            overflow-y: visible !important;
         }
         .attr_item_box {
             height: auto !important;
