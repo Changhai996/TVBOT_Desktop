@@ -13,93 +13,104 @@
         
         /* Control Panel & Layer Panel Glassmorphism */
         .control-plane, .layer-plane, #app > div {
-            background: rgba(255, 255, 255, 0.85) !important;
-            backdrop-filter: blur(16px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.4) !important;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
-            border-radius: 16px !important;
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(20px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.6) !important;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1) !important;
+            border-radius: 12px !important;
         }
         
         /* Buttons */
-        .btn-xiaochi, .mybutton {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        .btn-xiaochi, .mybutton, button {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
             border: none !important;
-            border-radius: 8px !important;
+            border-radius: 6px !important;
             color: white !important;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
-            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 10px rgba(79, 172, 254, 0.3) !important;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+            font-weight: 500 !important;
         }
-        .btn-xiaochi:hover, .mybutton:hover {
+        .btn-xiaochi:hover, .mybutton:hover, button:hover {
             transform: translateY(-2px) !important;
-            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4) !important;
+            box-shadow: 0 6px 15px rgba(79, 172, 254, 0.4) !important;
+            filter: brightness(1.05) !important;
         }
         
-        /* Inputs */
-        input[type="text"], input[type="number"], select {
-            border-radius: 8px !important;
-            border: 1px solid #e2e8f0 !important;
-            padding: 6px 12px !important;
-            transition: border-color 0.2s !important;
+        /* Inputs & Selects */
+        input[type="text"], input[type="number"], select, .form-control, .form-select {
+            border-radius: 6px !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            background: rgba(255, 255, 255, 0.8) !important;
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+            color: #333 !important;
+            transition: all 0.3s ease !important;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02) !important;
         }
-        input:focus, select:focus {
-            border-color: #10b981 !important;
+        input:focus, select:focus, .form-control:focus, .form-select:focus {
+            border-color: #4facfe !important;
             outline: none !important;
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.2) !important;
+            background: #fff !important;
         }
         
         /* Global Background */
         body {
-            background-color: #f8fafc !important;
+            background: #f0f4f8 !important;
         }
         #svg-div {
-            background: #f8fafc !important;
+            background: transparent !important;
         }
         svg {
             background: white !important;
             border-radius: 12px !important;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06) !important;
             margin: 20px !important;
         }
         
         /* Top UI Restyling */
         #tvbot-top-ui {
-            background: rgba(255, 255, 255, 0.9) !important;
-            backdrop-filter: blur(12px) !important;
-            border: 1px solid rgba(255,255,255,0.5) !important;
-            border-radius: 16px !important;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+            background: rgba(255, 255, 255, 0.8) !important;
+            backdrop-filter: blur(20px) saturate(180%) !important;
+            border: 1px solid rgba(255,255,255,0.6) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1) !important;
             padding: 10px 15px !important;
             gap: 12px !important;
         }
         #tvbot-back-btn {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-            border-radius: 8px !important;
+            background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%) !important;
+            border-radius: 6px !important;
             padding: 8px 16px !important;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+            box-shadow: 0 4px 10px rgba(255, 8, 68, 0.3) !important;
+            font-weight: bold !important;
         }
         #tvbot-back-btn:hover {
             transform: translateY(-2px) !important;
-            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4) !important;
+            box-shadow: 0 6px 15px rgba(255, 8, 68, 0.4) !important;
         }
         
         /* Tool wrappers inside Top UI */
         #tvbot-top-ui > div {
-            border: 1px solid #e2e8f0 !important;
-            background: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.5) !important;
+            background: rgba(255, 255, 255, 0.6) !important;
             border-radius: 8px !important;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
             padding: 6px 12px !important;
         }
         /* Project Manager Box Title Input Width */
-        #project-manager-box input[type="text"] {
+        #project-manager-box input {
             min-width: 500px !important;
             font-size: 16px !important;
-            font-weight: bold !important;
+            font-weight: 600 !important;
+            color: #2d3748 !important;
+            letter-spacing: 0.5px !important;
         }
 
         /* Right Panel Compactness */
         .control-plane {
-            padding: 10px !important;
+            padding: 12px !important;
             display: flex !important;
             flex-direction: column !important;
         }
@@ -109,56 +120,74 @@
             border: none !important;
         }
         .attr_plane_box {
-            padding: 5px 8px !important;
+            padding: 8px 10px !important;
             max-height: calc(100vh - 120px) !important;
         }
         .attr_item_box {
-            height: 28px !important;
-            line-height: 28px !important;
-            margin-top: 4px !important;
-            padding: 0 2px !important;
+            height: auto !important;
+            min-height: 32px !important;
+            line-height: normal !important;
+            margin-top: 6px !important;
+            padding: 4px 6px !important;
+            display: flex !important;
+            align-items: center !important;
+            border-radius: 6px !important;
+            transition: background 0.2s !important;
+        }
+        .attr_item_box:hover {
+            background: rgba(0,0,0,0.02) !important;
         }
         .attr_type_out_box {
-            margin-top: 6px !important;
-            padding-bottom: 4px !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+            margin-top: 8px !important;
+            padding-bottom: 6px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
+            border-radius: 8px !important;
+            background: rgba(255, 255, 255, 0.5) !important;
         }
         .attr_type_name {
-            height: 26px !important;
-            line-height: 26px !important;
-            font-size: 13px !important;
+            height: 30px !important;
+            line-height: 30px !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            color: #4a5568 !important;
+            border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+            margin-bottom: 4px !important;
         }
         .my-form-label {
-            max-width: 130px !important;
-            font-size: 12px !important;
+            max-width: 140px !important;
+            font-size: 13px !important;
+            color: #4a5568 !important;
+            font-weight: 500 !important;
         }
         #app input, #app select {
-            min-height: 24px !important;
-            height: 24px !important;
-            line-height: 24px !important;
-            font-size: 12px !important;
-            padding: 2px 6px !important;
+            min-height: 28px !important;
+            height: 28px !important;
+            line-height: 28px !important;
+            font-size: 13px !important;
+            padding: 2px 8px !important;
         }
         .mybutton {
-            height: 24px !important;
-            line-height: 24px !important;
-            font-size: 12px !important;
+            height: 28px !important;
+            line-height: 28px !important;
+            font-size: 13px !important;
+            padding: 0 12px !important;
         }
         .mynav-horizontal .cu-item {
-            height: 32px !important;
-            line-height: 32px !important;
-            font-size: 13px !important;
+            height: 36px !important;
+            line-height: 36px !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
         }
         .color_set_row {
-            margin-top: 4px !important;
+            margin-top: 6px !important;
         }
         .attr_list_box {
-            padding: 4px !important;
+            padding: 6px !important;
         }
         /* Reduce spacing between elements */
-        .mb-3 { margin-bottom: 0.5rem !important; }
-        .mt-3 { margin-top: 0.5rem !important; }
-        hr { margin: 0.5rem 0 !important; }
+        .mb-3 { margin-bottom: 0.75rem !important; }
+        .mt-3 { margin-top: 0.75rem !important; }
+        hr { margin: 0.75rem 0 !important; border-color: rgba(0,0,0,0.05) !important; }
 
     `;
     const styleEl = document.createElement('style');
@@ -723,7 +752,7 @@
   height: 24px !important;
   line-height: 24px !important;
 }
-#project-manager-box input[type="text"] {
+#project-manager-box input {
   min-width: 500px !important;
   font-size: 16px !important;
   font-weight: bold !important;
@@ -3753,7 +3782,8 @@
         box.appendChild(rowStyle);
         box.appendChild(row3);
 
-        vertical.insertBefore(box, vertical.firstChild);
+        // Append to the end instead of inserting before
+        vertical.appendChild(box);
         refreshCheckpoints().catch(() => {});
 
         const refreshTreeOpsState = () => {

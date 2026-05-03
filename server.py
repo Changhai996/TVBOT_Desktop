@@ -475,36 +475,52 @@ def render_local_my_trees():
                         </div>
                         <div class="project-body" id="body-{{ project_name }}" style="display: none;">
                             {% if trees %}
-                                {% for file in trees %}
-                                <div class="tree-item" data-name="{{ file.name }}" data-time="{{ file.mtime }}" data-html="{{ file.html }}">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <input type="checkbox" class="form-check-input tree-checkbox mt-0" value="{{ file.rel_path }}">
-                                        <div>
-                                            <div class="tree-name">{{ file.name.replace('.json', '') }}</div>
-                                            <div class="tree-meta">
-                                                <span><i class="bi bi-clock"></i> {{ file.time_str }}</span>
-                                                <span><i class="bi bi-layout-wtf"></i> {{ file.html.replace('.html', '') }}</span>
+                                <div class="list-group list-group-flush border-top">
+                                    <div class="list-group-item bg-light text-muted small fw-semibold d-flex align-items-center py-2" style="font-size: 0.8rem; letter-spacing: 0.5px;">
+                                        <div style="width: 40px;" class="text-center">
+                                            <input type="checkbox" class="form-check-input mt-0 folder-select-all" data-target="{{ project_name }}" onchange="toggleFolderSelect(this, '{{ project_name }}')">
+                                        </div>
+                                        <div class="flex-grow-1 cursor-pointer" onclick="sortFolder('{{ project_name }}', 'name')" style="cursor: pointer;">Name <i class="bi bi-arrow-down-up ms-1 opacity-50"></i></div>
+                                        <div style="width: 180px;" class="cursor-pointer" onclick="sortFolder('{{ project_name }}', 'time')" style="cursor: pointer;">Date Modified <i class="bi bi-arrow-down-up ms-1 opacity-50"></i></div>
+                                        <div style="width: 120px;">Layout Type</div>
+                                        <div style="width: 260px;" class="text-center">Actions</div>
+                                    </div>
+                                    <div class="folder-items-container" id="items-{{ project_name }}">
+                                        {% for file in trees %}
+                                        <div class="list-group-item tree-item d-flex align-items-center py-2 border-bottom" data-name="{{ file.name }}" data-time="{{ file.mtime }}" data-html="{{ file.html }}" style="transition: background 0.15s; font-size: 0.9rem;">
+                                            <div style="width: 40px;" class="text-center">
+                                                <input type="checkbox" class="form-check-input tree-checkbox mt-0 cb-{{ project_name }}" value="{{ file.rel_path }}">
+                                            </div>
+                                            <div class="flex-grow-1 text-truncate pe-3">
+                                                <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                                                <span class="tree-name fw-medium text-dark">{{ file.name.replace('.json', '') }}</span>
+                                            </div>
+                                            <div style="width: 180px;" class="text-muted small">
+                                                {{ file.time_str }}
+                                            </div>
+                                            <div style="width: 120px;" class="text-muted small">
+                                                <span class="badge bg-light text-dark border">{{ file.html.replace('.html', '') }}</span>
+                                            </div>
+                                            <div style="width: 260px;" class="d-flex gap-1 justify-content-end">
+                                                <a href="/{{ file.html }}?originalJsonDataUri=/api/get_tree/{{ file.encoded_rel_path }}&projectId={{ project_name }}&treeTitle={{ file.name.replace('.json', '') }}" class="btn btn-sm btn-custom-primary btn-action py-1 px-2" style="font-size: 0.8rem;">Open</a>
+                                                <button onclick="renameTree('{{ file.rel_path }}')" class="btn btn-sm btn-light btn-action border py-1 px-2" style="font-size: 0.8rem;">Rename</button>
+                                                <button onclick="copyTree('{{ file.rel_path }}','{{ project_name }}','{{ file.name.replace('.json', '') }}')" class="btn btn-sm btn-light btn-action border py-1 px-2" style="font-size: 0.8rem;">Copy</button>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-light btn-action border py-1 px-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" style="font-size: 0.8rem;">Move</button>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                        {% for p in project_names %}
+                                                            {% if p != project_name %}
+                                                                <li><a class="dropdown-item small" href="#" onclick="moveTree('{{ file.rel_path }}', '{{ p }}')">{{ 'Default Project' if p == 'default' else p }}</a></li>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                                <button onclick="deleteTree('{{ file.rel_path }}')" class="btn btn-sm btn-outline-danger btn-action ms-1 py-1 px-2" style="font-size: 0.8rem;"><i class="bi bi-trash"></i></button>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="d-flex gap-2 align-items-center">
-                                        <a href="/{{ file.html }}?originalJsonDataUri=/api/get_tree/{{ file.encoded_rel_path }}&projectId={{ project_name }}&treeTitle={{ file.name.replace('.json', '') }}" class="btn btn-custom-primary btn-action text-decoration-none">Open</a>
-                                        <button onclick="renameTree('{{ file.rel_path }}')" class="btn btn-light btn-action border">Rename</button>
-                                        <button onclick="copyTree('{{ file.rel_path }}','{{ project_name }}','{{ file.name.replace('.json', '') }}')" class="btn btn-light btn-action border">Copy</button>
-                                        <div class="dropdown">
-                                            <button class="btn btn-light btn-action border dropdown-toggle" type="button" data-bs-toggle="dropdown">Move</button>
-                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                                {% for p in project_names %}
-                                                    {% if p != project_name %}
-                                                        <li><a class="dropdown-item small" href="#" onclick="moveTree('{{ file.rel_path }}', '{{ p }}')">{{ 'Default Project' if p == 'default' else p }}</a></li>
-                                                    {% endif %}
-                                                {% endfor %}
-                                            </ul>
-                                        </div>
-                                        <button onclick="deleteTree('{{ file.rel_path }}')" class="btn btn-outline-danger btn-action ms-1"><i class="bi bi-trash"></i></button>
+                                        {% endfor %}
                                     </div>
                                 </div>
-                                {% endfor %}
                             {% else %}
                                 <div class="p-4 text-center text-muted small bg-light">Folder is empty.</div>
                             {% endif %}
@@ -572,6 +588,41 @@ def render_local_my_trees():
                     body.style.display = 'none';
                     icon.className = 'bi bi-chevron-right text-muted ms-2';
                 }
+            }
+
+            function toggleFolderSelect(checkbox, projectName) {
+                const checked = checkbox.checked;
+                document.querySelectorAll('.cb-' + projectName).forEach(cb => cb.checked = checked);
+            }
+
+            let sortState = {};
+            function sortFolder(projectName, criterion) {
+                if (!sortState[projectName]) sortState[projectName] = { name: 1, time: -1 };
+                
+                const container = document.getElementById('items-' + projectName);
+                if (!container) return;
+                
+                const items = Array.from(container.getElementsByClassName('tree-item'));
+                if (!items.length) return;
+
+                const direction = sortState[projectName][criterion] || 1;
+                
+                items.sort((a, b) => {
+                    if (criterion === 'name') {
+                        const nameA = a.getAttribute('data-name').toLowerCase();
+                        const nameB = b.getAttribute('data-name').toLowerCase();
+                        return direction * nameA.localeCompare(nameB);
+                    } else {
+                        const timeA = parseFloat(a.getAttribute('data-time'));
+                        const timeB = parseFloat(b.getAttribute('data-time'));
+                        return direction * (timeB - timeA); // default is newest first
+                    }
+                });
+                
+                // Toggle direction for next click
+                sortState[projectName][criterion] *= -1;
+                
+                items.forEach(item => container.appendChild(item));
             }
 
             function toggleSelectAll() {
