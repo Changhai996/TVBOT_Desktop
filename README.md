@@ -56,5 +56,5 @@ start_windows.bat --conda
 
 ## Citation
 
-If you use this tool in your research, please cite the original TVBOT rendering engine:
+If you use this tool in your research, please cite this repo as well as the original TVBOT rendering engine:
 *Xie et al., (2023) Nucleic Acids Res doi: 10.1093/nar/gkad359*
