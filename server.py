@@ -11,7 +11,12 @@ import urllib.parse
 # Suppress the Flask development server warning
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
-os.environ['WERKZEUG_RUN_MAIN'] = 'true'
+import sys
+try:
+    import flask.cli
+    flask.cli.show_server_banner = lambda *args, **kwargs: None
+except Exception:
+    pass
 
 app = Flask(__name__, static_folder='src')
 CORS(app)
