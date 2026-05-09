@@ -2042,34 +2042,7 @@
         window.__tvbot_soft_prune_api.undo = softUndo;
         window.__tvbot_soft_prune_api.redo = softRedo;
 
-        const hookHardDeleteList = () => {
-            const list = app.styleData && app.styleData.deleteWholeCladeList;
-            if (!Array.isArray(list)) return;
-            if (list.__tvbot_soft_hooked) return;
-            const wrap = (name) => {
-                const orig = list[name];
-                if (typeof orig !== 'function') return;
-                list[name] = function() {
-                    if (getSoftPruneEnabled() && !app.__tvbot_soft_internal) {
-                        app.__tvbot_soft_internal = true;
-                        try {
-                            const ok = toggleDeleteForCurrent();
-                            if (ok) return list.length;
-                        } finally {
-                            app.__tvbot_soft_internal = false;
-                        }
-                    }
-                    return orig.apply(list, arguments);
-                };
-            };
-            wrap('push');
-            wrap('unshift');
-            wrap('splice');
-            Object.defineProperty(list, '__tvbot_soft_hooked', { value: true, configurable: true });
-        };
-
         setInterval(() => {
-            hookHardDeleteList();
             applySoftDeleteMarks(app);
         }, 900);
     }

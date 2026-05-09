@@ -494,8 +494,8 @@ def render_local_my_trees():
                                         <div style="width: 40px;" class="text-center">
                                             <input type="checkbox" class="form-check-input mt-0 folder-select-all" data-target="{{ project_name }}" onchange="toggleFolderSelect(this, '{{ project_name }}')">
                                         </div>
-                                        <div class="flex-grow-1 cursor-pointer" onclick="sortFolder('{{ project_name }}', 'name')" style="cursor: pointer;">Name <i class="bi bi-arrow-down-up ms-1 opacity-50"></i></div>
-                                        <div style="width: 180px;" class="cursor-pointer" onclick="sortFolder('{{ project_name }}', 'time')" style="cursor: pointer;">Date Modified <i class="bi bi-arrow-down-up ms-1 opacity-50"></i></div>
+                                        <div class="flex-grow-1 cursor-pointer" onclick="sortFolder('{{ project_name }}', 'name')" style="cursor: pointer; user-select: none;">Name <i class="bi bi-arrow-down-up ms-1 opacity-50"></i></div>
+                                        <div style="width: 180px;" class="cursor-pointer" onclick="sortFolder('{{ project_name }}', 'time')" style="cursor: pointer; user-select: none;">Date Modified <i class="bi bi-arrow-down-up ms-1 opacity-50"></i></div>
                                         <div style="width: 120px;">Layout Type</div>
                                         <div style="width: 260px;" class="text-center">Actions</div>
                                     </div>
@@ -503,7 +503,7 @@ def render_local_my_trees():
                                         {% for file in trees %}
                                         <div class="list-group-item tree-item d-flex align-items-center py-2 border-bottom" data-name="{{ file.name }}" data-time="{{ file.mtime }}" data-html="{{ file.html }}" style="transition: background 0.15s; font-size: 0.9rem;">
                                             <div style="width: 40px;" class="text-center">
-                                                <input type="checkbox" class="form-check-input tree-checkbox mt-0 cb-{{ project_name }}" value="{{ file.rel_path }}">
+                                                <input type="checkbox" class="form-check-input tree-checkbox mt-0" data-project="{{ project_name }}" value="{{ file.rel_path }}">
                                             </div>
                                             <div class="flex-grow-1 text-truncate pe-3">
                                                 <i class="bi bi-file-earmark-text text-primary me-2"></i>
@@ -606,12 +606,13 @@ def render_local_my_trees():
 
             function toggleFolderSelect(checkbox, projectName) {
                 const checked = checkbox.checked;
-                document.querySelectorAll('.cb-' + projectName).forEach(cb => cb.checked = checked);
+                // Use attribute selector to handle project names with spaces
+                document.querySelectorAll(`.tree-checkbox[data-project="${projectName}"]`).forEach(cb => cb.checked = checked);
             }
 
             let sortState = {};
             function sortFolder(projectName, criterion) {
-                if (!sortState[projectName]) sortState[projectName] = { name: 1, time: -1 };
+                if (!sortState[projectName]) sortState[projectName] = { name: 1, time: 1 };
                 
                 const container = document.getElementById('items-' + projectName);
                 if (!container) return;
