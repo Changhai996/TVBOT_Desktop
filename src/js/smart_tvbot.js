@@ -2321,10 +2321,8 @@
             let realIdx = null;
             if (d && d.target && d.target.data && d.target.data.nodeIndex != null) {
                 realIdx = String(d.target.data.nodeIndex);
-            } else if (d && d.data && d.data.nodeIndex != null) {
-                realIdx = String(d.data.nodeIndex);
             }
-
+            
             const cachedIdx = el.getAttribute('data-tvbot-branch-node-index');
             
             // Check if DOM element was recycled by D3 for a different node
@@ -2698,7 +2696,7 @@
             if (!node || typeof node.descendants !== 'function') return [];
             
             const isFolded = (n) => {
-                return !!(n && n.data && n.data.nodeIndex && app.styleData && app.styleData.collapseCladeList && app.styleData.collapseCladeList.some(c => c.nodeIndex === n.data.nodeIndex));
+                return !!(n && n.data && n.data.nodeIndex != null && app.styleData && app.styleData.collapseCladeList && app.styleData.collapseCladeList.some(c => String(c.nodeIndex) === String(n.data.nodeIndex)));
             };
             
             // If the node itself is folded, we still return the node itself so its parent branch is colored.
@@ -2734,7 +2732,7 @@
             if (!node || typeof node.descendants !== 'function') return [];
             
             const isFolded = (n) => {
-                return !!(n && n.data && n.data.nodeIndex && app.styleData && app.styleData.collapseCladeList && app.styleData.collapseCladeList.some(c => c.nodeIndex === n.data.nodeIndex));
+                return !!(n && n.data && n.data.nodeIndex != null && app.styleData && app.styleData.collapseCladeList && app.styleData.collapseCladeList.some(c => String(c.nodeIndex) === String(n.data.nodeIndex)));
             };
 
             let result = [];
@@ -2772,7 +2770,7 @@
             const branchElMap = svg ? buildBranchElementMap(app, svg) : new Map();
             
             const isFolded = (n) => {
-                return !!(n && n.data && n.data.nodeIndex && app.styleData && app.styleData.collapseCladeList && app.styleData.collapseCladeList.some(c => c.nodeIndex === n.data.nodeIndex));
+                return !!(n && n.data && n.data.nodeIndex != null && app.styleData && app.styleData.collapseCladeList && app.styleData.collapseCladeList.some(c => String(c.nodeIndex) === String(n.data.nodeIndex)));
             };
 
             const uniqueNodes = Array.from(new Set(nodes));
@@ -3303,7 +3301,7 @@
             const info = api.getCurrentNodeInfo ? api.getCurrentNodeInfo() : null;
             const canBranch = !!(info && info.hasParent);
             const canLeaf = !!(info && (info.isLeaf || info.hasParent));
-            const isFolded = !!(info && info.nodeIndex && app.styleData && app.styleData.collapseCladeList && app.styleData.collapseCladeList.some(c => c.nodeIndex === info.nodeIndex));
+            const isFolded = !!(info && info.nodeIndex && app.styleData && app.styleData.collapseCladeList && app.styleData.collapseCladeList.some(c => String(c.nodeIndex) === String(info.nodeIndex)));
             
             deleteCladeItem.style.display = canBranch ? '' : 'none';
             softDeleteLeafItem.style.display = canLeaf ? '' : 'none';
@@ -4053,7 +4051,7 @@
             e.stopPropagation();
             const api = window.__tvbot_node_style_api;
             const info = api && api.getCurrentNodeInfo ? api.getCurrentNodeInfo() : null;
-            const isFolded = !!(info && info.nodeIndex && app.styleData && app.styleData.collapseCladeList && app.styleData.collapseCladeList.some(c => c.nodeIndex === info.nodeIndex));
+            const isFolded = !!(info && info.nodeIndex && app.styleData && app.styleData.collapseCladeList && app.styleData.collapseCladeList.some(c => String(c.nodeIndex) === String(info.nodeIndex)));
             if (!isFolded) {
                 alert('Please left-click a folded clade first.');
                 return;
