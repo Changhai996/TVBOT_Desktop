@@ -2696,7 +2696,13 @@
         const getCurrentBranchSubtreeNodes = () => {
             const node = getCurrentBranchRootNode();
             if (!node || typeof node.descendants !== 'function') return [];
-            return (node.descendants() || []).filter(x => x && x.parent);
+            return [node, ...(node.descendants() || [])].filter(x => x && x.parent);
+        };
+
+        const getCurrentLeafSubtreeNodes = () => {
+            const node = getCurrentBranchRootNode();
+            if (!node || typeof node.descendants !== 'function') return [];
+            return [node, ...(node.descendants() || [])].filter(x => x && (!x.children || x.children.length === 0));
         };
 
         const styleCurrentBranchSubtree = (opts = {}) => {
@@ -2707,7 +2713,9 @@
             const state = getCurrentContextState();
             const svg = document.querySelector('svg#svg');
             const branchElMap = svg ? buildBranchElementMap(app, svg) : new Map();
-            nodes.forEach((node, idx) => {
+            
+            const uniqueNodes = Array.from(new Set(nodes));
+            uniqueNodes.forEach((node, idx) => {
                 const nodeIndex = String(node.data && node.data.nodeIndex != null ? node.data.nodeIndex : '');
                 if (!nodeIndex) return;
                 const current = app.styleData.tvbotBranchStyles.find(x => x && String(x.nodeIndex) === nodeIndex) || {};
@@ -2744,15 +2752,29 @@
 
         const styleCurrentLeaf = (opts = {}) => {
             const info = getCurrentNodeInfo();
-            if (!info || !info.isLeaf || !info.leafId) return false;
-            const current = app.styleData.tvbotLeafStyles.find(x => x && String(x.leafId) === info.leafId) || {};
-            const item = {
-                leafId: info.leafId,
-                nodeIndex: info.nodeIndex,
-                color: normalizeStyleColor(opts.color != null ? opts.color : current.color, '#dc2626'),
-                bold: opts.bold != null ? !!opts.bold : !!current.bold
+            if (!info || (!info.isLeaf && !info.hasParent)) return false;
+
+            const applyLeafStyle = (leafNode) => {
+                const lId = String(pickTreeNodeLabel(leafNode) || '').trim();
+                if (!lId) return;
+                const current = app.styleData.tvbotLeafStyles.find(x => x && String(x.leafId) === lId) || {};
+                const item = {
+                    leafId: lId,
+                    nodeIndex: String(leafNode.data && leafNode.data.nodeIndex != null ? leafNode.data.nodeIndex : ''),
+                    color: normalizeStyleColor(opts.color != null ? opts.color : current.color, '#dc2626'),
+                    bold: opts.bold != null ? !!opts.bold : !!current.bold
+                };
+                upsertByKey(app.styleData.tvbotLeafStyles, x => x.leafId, item);
             };
-            upsertByKey(app.styleData.tvbotLeafStyles, x => x.leafId, item);
+
+            if (info.isLeaf && info.leafId) {
+                const node = getTreeNodeByIndex(app, info.nodeIndex);
+                if (node) applyLeafStyle(node);
+            } else if (info.hasParent) {
+                const leaves = getCurrentLeafSubtreeNodes();
+                leaves.forEach(applyLeafStyle);
+            }
+
             applyNodeStyleMarks(app);
             return true;
         };
@@ -3102,8 +3124,8 @@
 
         const leafColorItem = mkItem('tvbot-ctx-leaf-color', 'cuIcon-colorlens', 'Color leaf', (e) => {
             const info = api.getCurrentNodeInfo();
-            if (!info || !info.isLeaf) {
-                alert('Please left-click or right-click a leaf node first.');
+            if (!info || (!info.isLeaf && !info.hasParent)) {
+                alert('Please left-click or right-click a leaf or branch first.');
                 return;
             }
             const rect = e.target ? e.target.getBoundingClientRect() : { left: e.clientX, top: e.clientY };
@@ -3116,8 +3138,8 @@
 
         const leafBoldItem = mkItem('tvbot-ctx-leaf-bold', 'cuIcon-textbold', 'Bold leaf', () => {
             const info = api.getCurrentNodeInfo();
-            if (!info || !info.isLeaf) {
-                alert('Please left-click or right-click a leaf node first.');
+            if (!info || (!info.isLeaf && !info.hasParent)) {
+                alert('Please left-click or right-click a leaf or branch first.');
                 return;
             }
             if (api.styleCurrentLeaf({ bold: true })) hideTreeContextMenu();
@@ -3141,7 +3163,7 @@
         const refreshMenu = () => {
             const info = api.getCurrentNodeInfo ? api.getCurrentNodeInfo() : null;
             const canBranch = !!(info && info.hasParent);
-            const canLeaf = !!(info && info.isLeaf);
+            const canLeaf = !!(info && (info.isLeaf || info.hasParent));
             const isFolded = !!(info && info.nodeIndex && app.styleData && app.styleData.collapseCladeList && app.styleData.collapseCladeList.some(c => c.nodeIndex === info.nodeIndex));
             
             deleteCladeItem.style.display = canBranch ? '' : 'none';
@@ -3856,8 +3878,8 @@
             e.stopPropagation();
             const api = window.__tvbot_node_style_api;
             const info = api && api.getCurrentNodeInfo ? api.getCurrentNodeInfo() : null;
-            if (!info || !info.isLeaf) {
-                alert('Please left-click a leaf node first.');
+            if (!info || (!info.isLeaf && !info.hasParent)) {
+                alert('Please left-click a leaf or branch first.');
                 return;
             }
             const rect = e.target ? e.target.getBoundingClientRect() : { left: e.clientX, top: e.clientY };
@@ -3876,8 +3898,8 @@
             e.stopPropagation();
             const api = window.__tvbot_node_style_api;
             const info = api && api.getCurrentNodeInfo ? api.getCurrentNodeInfo() : null;
-            if (!info || !info.isLeaf) {
-                alert('Please left-click a leaf node first.');
+            if (!info || (!info.isLeaf && !info.hasParent)) {
+                alert('Please left-click a leaf or branch first.');
                 return;
             }
             api.styleCurrentLeaf({ bold: true });
