@@ -2738,6 +2738,49 @@
             return true;
         };
 
+        const deleteCurrentClade = () => {
+            const info = getCurrentNodeInfo();
+            if (!info || !info.nodeIndex) return false;
+            if (info.nodeIndex === 'N0' || info.nodeIndex === 'N-root') {
+                alert('Cannot delete the root node.');
+                return false;
+            }
+            if (!Array.isArray(app.styleData.deleteWholeCladeList)) {
+                app.styleData.deleteWholeCladeList = [];
+            }
+            app.styleData.deleteWholeCladeList.push({ nodeIndex: info.nodeIndex });
+            if (app.styleData.rootNodeIndex) {
+                app.reRootTree(app.styleData.rootNodeIndex, app.styleData.rootOffsetRate);
+            } else {
+                app.reRootTree();
+            }
+            return true;
+        };
+
+        const styleCurrentFoldedTriangle = (opts = {}) => {
+            const info = getCurrentNodeInfo();
+            if (!info || !info.nodeIndex) return false;
+            if (!app.figureData) return false;
+            if (!app.figureData["folded clade"]) app.figureData["folded clade"] = {};
+            if (!app.figureData["folded clade"]["Custom color"]) {
+                app.figureData["folded clade"]["Custom color"] = { switch: { value: true } };
+            }
+            app.figureData["folded clade"]["Custom color"].switch = { value: true };
+            app.figureData["folded clade"]["Custom color"][info.nodeIndex] = {
+                type: "color",
+                value: opts.color || "#cccccc",
+                isSvgAttr: true
+            };
+            
+            // Force redraw of folded clades
+            if (typeof app.drawTriangle === 'function') {
+                app.drawTriangle();
+            } else if (typeof app.init === 'function') {
+                app.init();
+            }
+            return true;
+        };
+
         window.__tvbot_node_style_api = {
             getCurrentNodeInfo,
             getCurrentContextState,
@@ -2748,6 +2791,8 @@
             clearCurrentBranchStyle,
             styleCurrentLeaf,
             clearCurrentLeafStyle,
+            deleteCurrentClade,
+            styleCurrentFoldedTriangle,
             apply: () => applyNodeStyleMarks(app)
         };
 
@@ -2786,6 +2831,86 @@
         }
         const menu = document.getElementById('tree-structure-change-btn-box');
         if (menu) menu.style.display = 'none';
+    }
+
+    function showAcademicColorPicker(x, y, callback) {
+        let picker = document.getElementById('tvbot-academic-color-picker');
+        if (picker) picker.remove();
+
+        picker = document.createElement('div');
+        picker.id = 'tvbot-academic-color-picker';
+        picker.style.cssText = `
+            position: fixed;
+            left: ${x}px;
+            top: ${y}px;
+            background: #fff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            z-index: 99999;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        `;
+
+        const colors = [
+            '#E64B35', '#4DBBD5', '#00A087', '#3C5488',
+            '#F39B7F', '#8491B4', '#91D1C2', '#DC0000',
+            '#7E6148', '#B09C85', '#000000', '#7F7F7F'
+        ];
+
+        colors.forEach(c => {
+            const swatch = document.createElement('div');
+            swatch.style.cssText = `
+                width: 24px;
+                height: 24px;
+                border-radius: 4px;
+                background-color: ${c};
+                cursor: pointer;
+                border: 1px solid rgba(0,0,0,0.1);
+            `;
+            swatch.onclick = (e) => {
+                e.stopPropagation();
+                picker.remove();
+                callback(c);
+            };
+            picker.appendChild(swatch);
+        });
+
+        // Add a custom color input
+        const customWrapper = document.createElement('div');
+        customWrapper.style.cssText = 'grid-column: span 4; margin-top: 4px; display: flex; align-items: center; gap: 4px;';
+        
+        const customInput = document.createElement('input');
+        customInput.type = 'color';
+        customInput.style.cssText = 'width: 24px; height: 24px; padding: 0; border: none; cursor: pointer;';
+        
+        const customBtn = document.createElement('button');
+        customBtn.innerText = 'OK';
+        customBtn.style.cssText = 'font-size: 12px; padding: 2px 6px; border: 1px solid #d1d5db; border-radius: 4px; background: #f3f4f6; cursor: pointer; flex: 1;';
+        customBtn.onclick = (e) => {
+            e.stopPropagation();
+            picker.remove();
+            callback(customInput.value);
+        };
+
+        customWrapper.appendChild(customInput);
+        customWrapper.appendChild(customBtn);
+        picker.appendChild(customWrapper);
+
+        document.body.appendChild(picker);
+
+        // Click outside to close
+        setTimeout(() => {
+            const closePicker = (e) => {
+                if (!picker.contains(e.target)) {
+                    picker.remove();
+                    document.removeEventListener('click', closePicker);
+                }
+            };
+            document.addEventListener('click', closePicker);
+        }, 10);
     }
 
     function injectContextMenuStyling() {
@@ -2827,16 +2952,45 @@
         const wrap = document.createElement('section');
         wrap.id = 'tvbot-context-style-tools';
 
-        const branchColorItem = mkItem('tvbot-ctx-branch-color', 'cuIcon-colorlens', 'Color branch', () => {
+        const deleteCladeItem = mkItem('tvbot-ctx-delete-clade', 'cuIcon-delete', 'Delete branch/clade', (e) => {
+            const info = api.getCurrentNodeInfo();
+            if (!info || !info.nodeIndex) {
+                alert('Please left-click a node or branch first.');
+                return;
+            }
+            if (confirm('Delete this branch and all its descendants from the tree?')) {
+                if (api.deleteCurrentClade()) hideTreeContextMenu();
+            }
+        });
+
+        const colorTriangleItem = mkItem('tvbot-ctx-color-triangle', 'cuIcon-creative', 'Color folded clade', (e) => {
+            const info = api.getCurrentNodeInfo();
+            if (!info || !info.nodeIndex) {
+                alert('Please left-click a folded clade first.');
+                return;
+            }
+            const rect = e.target ? e.target.getBoundingClientRect() : { left: e.clientX, top: e.clientY };
+            showAcademicColorPicker(rect.left + 150, rect.top, (color) => {
+                if (color) {
+                    api.styleCurrentFoldedTriangle({ color });
+                    hideTreeContextMenu();
+                }
+            });
+        });
+
+        const branchColorItem = mkItem('tvbot-ctx-branch-color', 'cuIcon-colorlens', 'Color branch', (e) => {
             const info = api.getCurrentNodeInfo();
             if (!info || !info.hasParent) {
                 alert('Please left-click a node or branch first.');
                 return;
             }
-            const color = prompt('Branch color (#hex or CSS color):', '#f97316');
-            if (color == null) return;
-            if (api.styleCurrentBranch({ color })) hideTreeContextMenu();
-            else alert('Please left-click a node or branch first, then try again.');
+            const rect = e.target ? e.target.getBoundingClientRect() : { left: e.clientX, top: e.clientY };
+            showAcademicColorPicker(rect.left + 150, rect.top, (color) => {
+                if (color) {
+                    if (api.styleCurrentBranch({ color })) hideTreeContextMenu();
+                    else alert('Please left-click a node or branch first, then try again.');
+                }
+            });
         });
 
         const branchBoldItem = mkItem('tvbot-ctx-branch-bold', 'cuIcon-pullup', 'Bold branch', () => {
@@ -2855,15 +3009,18 @@
             if (api.clearCurrentBranchStyle()) hideTreeContextMenu();
         });
 
-        const leafColorItem = mkItem('tvbot-ctx-leaf-color', 'cuIcon-colorlens', 'Color leaf', () => {
+        const leafColorItem = mkItem('tvbot-ctx-leaf-color', 'cuIcon-colorlens', 'Color leaf', (e) => {
             const info = api.getCurrentNodeInfo();
             if (!info || !info.isLeaf) {
                 alert('Please left-click or right-click a leaf node first.');
                 return;
             }
-            const color = prompt('Leaf label color (#hex or CSS color):', '#dc2626');
-            if (color == null) return;
-            if (api.styleCurrentLeaf({ color })) hideTreeContextMenu();
+            const rect = e.target ? e.target.getBoundingClientRect() : { left: e.clientX, top: e.clientY };
+            showAcademicColorPicker(rect.left + 150, rect.top, (color) => {
+                if (color) {
+                    if (api.styleCurrentLeaf({ color })) hideTreeContextMenu();
+                }
+            });
         });
 
         const leafBoldItem = mkItem('tvbot-ctx-leaf-bold', 'cuIcon-textbold', 'Bold leaf', () => {
@@ -2879,6 +3036,8 @@
             if (api.clearCurrentLeafStyle()) hideTreeContextMenu();
         });
 
+        wrap.appendChild(deleteCladeItem);
+        wrap.appendChild(colorTriangleItem);
         wrap.appendChild(branchColorItem);
         wrap.appendChild(branchBoldItem);
         wrap.appendChild(branchClearItem);
@@ -2891,6 +3050,10 @@
             const info = api.getCurrentNodeInfo ? api.getCurrentNodeInfo() : null;
             const canBranch = !!(info && info.hasParent);
             const canLeaf = !!(info && info.isLeaf);
+            const isFolded = !!(info && info.nodeIndex && app.styleData && app.styleData.collapseCladeList && app.styleData.collapseCladeList.some(c => c.nodeIndex === info.nodeIndex));
+            
+            deleteCladeItem.style.display = canBranch ? '' : 'none';
+            colorTriangleItem.style.display = isFolded ? '' : 'none';
             branchColorItem.style.display = canBranch ? '' : 'none';
             branchBoldItem.style.display = canBranch ? '' : 'none';
             branchClearItem.style.display = canBranch ? '' : 'none';
@@ -3555,18 +3718,21 @@
         branchColorBtn.className = 'btn btn-sm btn-outline-warning';
         branchColorBtn.innerText = 'Branch Color';
         branchColorBtn.style.height = '30px';
-        branchColorBtn.onclick = () => {
+        branchColorBtn.onclick = (e) => {
             const api = window.__tvbot_node_style_api;
             const info = api && api.getCurrentNodeInfo ? api.getCurrentNodeInfo() : null;
             if (!info || !info.hasParent) {
                 alert('Please left-click a node or branch first.');
                 return;
             }
-            const color = prompt('Branch color (#hex or CSS color):', '#f97316');
-            if (color == null) return;
-            if (!api.styleCurrentBranch({ color })) {
-                alert('Please left-click a node or branch first.');
-            }
+            const rect = e.target ? e.target.getBoundingClientRect() : { left: e.clientX, top: e.clientY };
+            showAcademicColorPicker(rect.left, rect.bottom + 5, (color) => {
+                if (color) {
+                    if (!api.styleCurrentBranch({ color })) {
+                        alert('Please left-click a node or branch first.');
+                    }
+                }
+            });
         };
 
         const branchBoldBtn = document.createElement('button');
@@ -3591,16 +3757,19 @@
         leafColorBtn.className = 'btn btn-sm btn-outline-danger';
         leafColorBtn.innerText = 'Leaf Color';
         leafColorBtn.style.height = '30px';
-        leafColorBtn.onclick = () => {
+        leafColorBtn.onclick = (e) => {
             const api = window.__tvbot_node_style_api;
             const info = api && api.getCurrentNodeInfo ? api.getCurrentNodeInfo() : null;
             if (!info || !info.isLeaf) {
                 alert('Please left-click a leaf node first.');
                 return;
             }
-            const color = prompt('Leaf label color (#hex or CSS color):', '#dc2626');
-            if (color == null) return;
-            api.styleCurrentLeaf({ color });
+            const rect = e.target ? e.target.getBoundingClientRect() : { left: e.clientX, top: e.clientY };
+            showAcademicColorPicker(rect.left, rect.bottom + 5, (color) => {
+                if (color) {
+                    api.styleCurrentLeaf({ color });
+                }
+            });
         };
 
         const leafBoldBtn = document.createElement('button');
@@ -3615,6 +3784,42 @@
                 return;
             }
             api.styleCurrentLeaf({ bold: true });
+        };
+
+        const foldColorBtn = document.createElement('button');
+        foldColorBtn.className = 'btn btn-sm btn-outline-primary';
+        foldColorBtn.innerText = 'Clade Color';
+        foldColorBtn.style.height = '30px';
+        foldColorBtn.onclick = (e) => {
+            const api = window.__tvbot_node_style_api;
+            const info = api && api.getCurrentNodeInfo ? api.getCurrentNodeInfo() : null;
+            const isFolded = !!(info && info.nodeIndex && app.styleData && app.styleData.collapseCladeList && app.styleData.collapseCladeList.some(c => c.nodeIndex === info.nodeIndex));
+            if (!isFolded) {
+                alert('Please left-click a folded clade first.');
+                return;
+            }
+            const rect = e.target ? e.target.getBoundingClientRect() : { left: e.clientX, top: e.clientY };
+            showAcademicColorPicker(rect.left, rect.bottom + 5, (color) => {
+                if (color) {
+                    api.styleCurrentFoldedTriangle({ color });
+                }
+            });
+        };
+
+        const deleteBranchBtn = document.createElement('button');
+        deleteBranchBtn.className = 'btn btn-sm btn-danger';
+        deleteBranchBtn.innerText = 'Delete Branch';
+        deleteBranchBtn.style.height = '30px';
+        deleteBranchBtn.onclick = () => {
+            const api = window.__tvbot_node_style_api;
+            const info = api && api.getCurrentNodeInfo ? api.getCurrentNodeInfo() : null;
+            if (!info || !info.hasParent) {
+                alert('Please left-click a node or branch first.');
+                return;
+            }
+            if (confirm('Delete this branch and all its descendants from the tree?')) {
+                api.deleteCurrentClade();
+            }
         };
 
         const clearNodeStyleBtn = document.createElement('button');
@@ -3657,12 +3862,14 @@
         row3.appendChild(exportLabel);
 
         rowStyle.appendChild(styleLabel);
-        rowStyle.appendChild(styleHint);
         rowStyle.appendChild(branchColorBtn);
         rowStyle.appendChild(branchBoldBtn);
         rowStyle.appendChild(leafColorBtn);
         rowStyle.appendChild(leafBoldBtn);
+        rowStyle.appendChild(foldColorBtn);
         rowStyle.appendChild(clearNodeStyleBtn);
+        rowStyle.appendChild(deleteBranchBtn);
+        rowStyle.appendChild(styleHint);
 
         box.appendChild(title);
         box.appendChild(row1);
