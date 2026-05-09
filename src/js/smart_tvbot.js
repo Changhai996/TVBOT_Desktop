@@ -2792,12 +2792,26 @@
                     if (!app.figureData["folded clade"]["Custom color"]) {
                         app.figureData["folded clade"]["Custom color"] = { switch: { value: true } };
                     }
+                    if (!app.figureData["folded clade"]["Custom stroke color"]) {
+                        app.figureData["folded clade"]["Custom stroke color"] = { switch: { value: true } };
+                    }
                     app.figureData["folded clade"]["Custom color"].switch = { value: true };
-                    app.figureData["folded clade"]["Custom color"][nodeIndex] = {
+                    app.figureData["folded clade"]["Custom stroke color"].switch = { value: true };
+                    // For triangle stroke, use the same color as the branch
+                    app.figureData["folded clade"]["Custom stroke color"][nodeIndex] = {
                         type: "color",
                         value: opts.color || "#cccccc",
                         isSvgAttr: true
                     };
+                    // Keep the fill color as default unless specifically set via color triangle tool
+                    // But if it wasn't set, default to gray to distinguish from branch line
+                    if (!app.figureData["folded clade"]["Custom color"][nodeIndex]) {
+                         app.figureData["folded clade"]["Custom color"][nodeIndex] = {
+                             type: "color",
+                             value: "#cccccc",
+                             isSvgAttr: true
+                         };
+                    }
                 }
             });
             
@@ -2905,6 +2919,30 @@
             return true;
         };
 
+        const styleCurrentFoldedTriangleStroke = (opts = {}) => {
+            const info = getCurrentNodeInfo();
+            if (!info || !info.nodeIndex) return false;
+            if (!app.figureData) return false;
+            if (!app.figureData["folded clade"]) app.figureData["folded clade"] = {};
+            if (!app.figureData["folded clade"]["Custom stroke color"]) {
+                app.figureData["folded clade"]["Custom stroke color"] = { switch: { value: true } };
+            }
+            app.figureData["folded clade"]["Custom stroke color"].switch = { value: true };
+            app.figureData["folded clade"]["Custom stroke color"][info.nodeIndex] = {
+                type: "color",
+                value: opts.color || "#000000",
+                isSvgAttr: true
+            };
+            
+            // Force redraw of folded clades
+            if (typeof app.drawTriangle === 'function') {
+                app.drawTriangle();
+            } else if (typeof app.init === 'function') {
+                app.init();
+            }
+            return true;
+        };
+
         window.__tvbot_node_style_api = {
             getCurrentNodeInfo,
             getCurrentContextState,
@@ -2917,6 +2955,7 @@
             clearCurrentLeafStyle,
             deleteCurrentClade,
             styleCurrentFoldedTriangle,
+            styleCurrentFoldedTriangleStroke,
             apply: () => applyNodeStyleMarks(app)
         };
 
@@ -3151,7 +3190,7 @@
             }
         });
 
-        const colorTriangleItem = mkItem('tvbot-ctx-color-triangle', 'cuIcon-creative', 'Color folded clade', (e) => {
+        const colorTriangleItem = mkItem('tvbot-ctx-color-triangle', 'cuIcon-creative', 'Color clade fill', (e) => {
             const info = api.getCurrentNodeInfo();
             if (!info || !info.nodeIndex) {
                 alert('Please left-click a folded clade first.');
@@ -3161,6 +3200,21 @@
             showAcademicColorPicker(rect.left + 150, rect.top, (color) => {
                 if (color) {
                     api.styleCurrentFoldedTriangle({ color });
+                    hideTreeContextMenu();
+                }
+            });
+        });
+
+        const colorTriangleStrokeItem = mkItem('tvbot-ctx-color-triangle-stroke', 'cuIcon-square', 'Color clade stroke', (e) => {
+            const info = api.getCurrentNodeInfo();
+            if (!info || !info.nodeIndex) {
+                alert('Please left-click a folded clade first.');
+                return;
+            }
+            const rect = e.target ? e.target.getBoundingClientRect() : { left: e.clientX, top: e.clientY };
+            showAcademicColorPicker(rect.left + 150, rect.top, (color) => {
+                if (color) {
+                    api.styleCurrentFoldedTriangleStroke({ color });
                     hideTreeContextMenu();
                 }
             });
@@ -3227,6 +3281,7 @@
         wrap.appendChild(deleteCladeItem);
         wrap.appendChild(softDeleteLeafItem);
         wrap.appendChild(colorTriangleItem);
+        wrap.appendChild(colorTriangleStrokeItem);
         wrap.appendChild(branchColorItem);
         wrap.appendChild(branchBoldItem);
         wrap.appendChild(branchClearItem);
@@ -3244,6 +3299,7 @@
             deleteCladeItem.style.display = canBranch ? '' : 'none';
             softDeleteLeafItem.style.display = canLeaf ? '' : 'none';
             colorTriangleItem.style.display = isFolded ? '' : 'none';
+            colorTriangleStrokeItem.style.display = isFolded ? '' : 'none';
             branchColorItem.style.display = canBranch ? '' : 'none';
             branchBoldItem.style.display = canBranch ? '' : 'none';
             branchClearItem.style.display = canBranch ? '' : 'none';
