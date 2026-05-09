@@ -2563,7 +2563,6 @@
             const leafNode = getTreeNodeByIndex(app, state.leafNodeIndex);
             if (leafNode) {
                 app.__tvbot_selected_branch_node_index = '';
-                if (app.styleData) app.styleData.currentNodeIndex = state.leafNodeIndex;
                 return leafNode;
             }
         }
@@ -2575,7 +2574,6 @@
         }
         if (!branchNode || !branchNode.parent) return null;
         app.__tvbot_selected_branch_node_index = String(branchNode.data && branchNode.data.nodeIndex != null ? branchNode.data.nodeIndex : '');
-        if (app.styleData) app.styleData.currentNodeIndex = app.__tvbot_selected_branch_node_index;
         return branchNode;
     }
 
