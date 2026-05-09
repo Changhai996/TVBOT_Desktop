@@ -496,7 +496,7 @@ def render_local_my_trees():
                                         </div>
                                         <div class="flex-grow-1 cursor-pointer" onclick="sortFolder('{{ project_name }}', 'name')" style="cursor: pointer; user-select: none;">Name <i class="bi bi-arrow-down-up ms-1 opacity-50"></i></div>
                                         <div style="width: 180px;" class="cursor-pointer" onclick="sortFolder('{{ project_name }}', 'time')" style="cursor: pointer; user-select: none;">Date Modified <i class="bi bi-arrow-down-up ms-1 opacity-50"></i></div>
-                                        <div style="width: 120px;">Layout Type</div>
+                                        <div style="width: 120px;" class="cursor-pointer" onclick="sortFolder('{{ project_name }}', 'layout')" style="cursor: pointer; user-select: none;">Layout Type <i class="bi bi-arrow-down-up ms-1 opacity-50"></i></div>
                                         <div style="width: 260px;" class="text-center">Actions</div>
                                     </div>
                                     <div class="folder-items-container" id="items-{{ project_name }}">
@@ -612,7 +612,7 @@ def render_local_my_trees():
 
             let sortState = {};
             function sortFolder(projectName, criterion) {
-                if (!sortState[projectName]) sortState[projectName] = { name: 1, time: 1 };
+                if (!sortState[projectName]) sortState[projectName] = { name: 1, time: 1, layout: 1 };
                 
                 const container = document.getElementById('items-' + projectName);
                 if (!container) return;
@@ -627,6 +627,10 @@ def render_local_my_trees():
                         const nameA = a.getAttribute('data-name').toLowerCase();
                         const nameB = b.getAttribute('data-name').toLowerCase();
                         return direction * nameA.localeCompare(nameB);
+                    } else if (criterion === 'layout') {
+                        const layoutA = a.getAttribute('data-html').toLowerCase();
+                        const layoutB = b.getAttribute('data-html').toLowerCase();
+                        return direction * layoutA.localeCompare(layoutB);
                     } else {
                         const timeA = parseFloat(a.getAttribute('data-time'));
                         const timeB = parseFloat(b.getAttribute('data-time'));
@@ -635,7 +639,7 @@ def render_local_my_trees():
                 });
                 
                 // Toggle direction for next click
-                sortState[projectName][criterion] *= -1;
+                sortState[projectName][criterion] = direction * -1;
                 
                 items.forEach(item => container.appendChild(item));
             }

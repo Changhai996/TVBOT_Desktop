@@ -2950,12 +2950,12 @@
             item.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                onClick();
+                onClick(e);
             });
             item.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                onClick();
+                onClick(e);
             }, { passive: false });
             return item;
         };
@@ -3744,6 +3744,7 @@
         branchColorBtn.innerText = 'Branch Color';
         branchColorBtn.style.height = '30px';
         branchColorBtn.onclick = (e) => {
+            e.stopPropagation();
             const api = window.__tvbot_node_style_api;
             const info = api && api.getCurrentNodeInfo ? api.getCurrentNodeInfo() : null;
             if (!info || !info.hasParent) {
@@ -3764,7 +3765,8 @@
         branchBoldBtn.className = 'btn btn-sm btn-outline-warning';
         branchBoldBtn.innerText = 'Branch Bold';
         branchBoldBtn.style.height = '30px';
-        branchBoldBtn.onclick = () => {
+        branchBoldBtn.onclick = (e) => {
+            e.stopPropagation();
             const api = window.__tvbot_node_style_api;
             const info = api && api.getCurrentNodeInfo ? api.getCurrentNodeInfo() : null;
             if (!info || !info.hasParent) {
@@ -3783,6 +3785,7 @@
         leafColorBtn.innerText = 'Leaf Color';
         leafColorBtn.style.height = '30px';
         leafColorBtn.onclick = (e) => {
+            e.stopPropagation();
             const api = window.__tvbot_node_style_api;
             const info = api && api.getCurrentNodeInfo ? api.getCurrentNodeInfo() : null;
             if (!info || !info.isLeaf) {
@@ -3801,7 +3804,8 @@
         leafBoldBtn.className = 'btn btn-sm btn-outline-danger';
         leafBoldBtn.innerText = 'Leaf Bold';
         leafBoldBtn.style.height = '30px';
-        leafBoldBtn.onclick = () => {
+        leafBoldBtn.onclick = (e) => {
+            e.stopPropagation();
             const api = window.__tvbot_node_style_api;
             const info = api && api.getCurrentNodeInfo ? api.getCurrentNodeInfo() : null;
             if (!info || !info.isLeaf) {
@@ -3816,6 +3820,7 @@
         foldColorBtn.innerText = 'Clade Color';
         foldColorBtn.style.height = '30px';
         foldColorBtn.onclick = (e) => {
+            e.stopPropagation();
             const api = window.__tvbot_node_style_api;
             const info = api && api.getCurrentNodeInfo ? api.getCurrentNodeInfo() : null;
             const isFolded = !!(info && info.nodeIndex && app.styleData && app.styleData.collapseCladeList && app.styleData.collapseCladeList.some(c => c.nodeIndex === info.nodeIndex));
