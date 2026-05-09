@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 
 // TVBOT Bootstrap Defaults: Text, size 3, x -3, y -3
 (function() {

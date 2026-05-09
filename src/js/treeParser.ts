@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 class TreeParser {
   constructor() {}
   identifyTreeFile(t) {

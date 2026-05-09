@@ -1,11 +1,13 @@
+// @ts-nocheck
+
 import {
   MainTree,
   maxLength,
   getNodeHeight,
-} from "/static/xiaochiPlot/minJS/mainTree.min.js";
-import { BarPlot } from "/static/xiaochiPlot/js/barPlot.js";
-import { hull } from "/static/xiaochiPlot/js/hull/hull.js";
-import { splitPath } from "/static/xiaochiPlot/js/splitPath.js";
+} from "./mainTree.ts";
+import { BarPlot } from "./barPlot.ts";
+import { hull } from "./hull.js";
+import { splitPath } from "./splitPath.ts";
 class NormalTree extends MainTree {
   constructor() {
     (super("treefile"),

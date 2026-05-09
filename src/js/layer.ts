@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 let layer_component_T = `<div id="data-layer-container">
         <div id="layer-container-header" class="xiaochi-background">
             <div id="hide-layer-container-btn" :class="{'cuIcon-unfold': isDataLayerContainerShow,'cuIcon-fold':!isDataLayerContainerShow}"  @click="hideLayerContainer"></div>

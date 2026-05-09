@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 
 class BarPlot  {
     constructor(mainPlot) {

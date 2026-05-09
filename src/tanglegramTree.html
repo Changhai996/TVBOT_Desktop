@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tanglegram (Cophylogeny) - TVBOT</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="shortcut icon" href="/static/xiaochiPlot/chiplot_favicon.ico" type="image/x-icon" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="/static/js/d3.v7.6.1.min.js"></script>
+
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="/static/css/bootstrap-icons.css" rel="stylesheet" type="text/css">
+    <style>
+        html, body {
+            margin: 0;
+            height: 100%;
+            background: #eef2f7;
+            font-family: Arial, sans-serif;
+        }
+
+        .tanglegram-page {
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .tanglegram-sidebar {
+            width: 340px;
+            min-width: 340px;
+            background: #ffffff;
+            border-right: 1px solid #d9e2ef;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .tanglegram-stage {
+            flex: 1;
+            position: relative;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        .stage-shell {
+            position: relative;
+            min-width: 1100px;
+            min-height: calc(100vh - 40px);
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            padding: 20px;
+        }
+
+        .canvas-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 14px;
+            padding: 0 4px;
+        }
+
+        .canvas-tree-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .canvas-board {
+            border: 1px solid #d9e2ef;
+            border-radius: 14px;
+            background: #f8fbff;
+            overflow: auto;
+            min-height: 760px;
+            position: relative;
+        }
+
+        .tree-pane-title, .canvas-tree-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .tree-pane-subtitle, .canvas-tree-subtitle {
+            font-size: 12px;
+            color: #6b7280;
+            margin: 2px 0 0;
+        }
+
+        .combined-svg {
+            display: block;
+            min-width: 100%;
+            min-height: 760px;
+            background: #f8fbff;
+        }
+
+        .render-sandbox {
+            position: fixed;
+            left: -20000px;
+            top: -20000px;
+            width: 10px;
+            height: 10px;
+            overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .connection-item {
+            font-size: 12px;
+        }
+
+        .status-box {
+            font-size: 12px;
+            color: #475569;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="tanglegram-page">
+    <aside class="tanglegram-sidebar">
+        <h5 class="fw-bold mb-3">双树比较</h5>
+
+        <div class="mb-4">
+            <label class="form-label fw-bold text-primary">左侧树</label>
+            <div class="d-grid gap-2">
+                <button class="btn btn-outline-success btn-sm" onclick="openWorkspaceModal(1)">
+                    从 Workspace 选择 JSON
+                </button>
+                <input type="file" class="form-control form-control-sm" id="file1" accept=".json,application/json">
+            </div>
+            <div class="mt-2 small text-success fw-bold" id="label-tree1"></div>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label fw-bold text-primary">右侧树</label>
+            <div class="d-grid gap-2">
+                <button class="btn btn-outline-success btn-sm" onclick="openWorkspaceModal(2)">
+                    从 Workspace 选择 JSON
+                </button>
+                <input type="file" class="form-control form-control-sm" id="file2" accept=".json,application/json">
+            </div>
+            <div class="mt-2 small text-success fw-bold" id="label-tree2"></div>
+        </div>
+
+        <div class="d-grid gap-2 mb-4">
+            <button class="btn btn-primary fw-bold" id="btn-draw">
+                加载左右双树
+            </button>
+            <button class="btn btn-outline-success" id="btn-manual-mode">
+                开启手动连线模式
+            </button>
+            <button class="btn btn-outline-primary" id="btn-auto-connect">
+                按叶名/折叠名自动连线
+            </button>
+            <button class="btn btn-outline-secondary" id="btn-clear-connections">
+                清空连线
+            </button>
+            <button class="btn btn-outline-danger" id="btn-box-delete-mode">
+                开启框选删线
+            </button>
+            <button class="btn btn-outline-info" id="btn-toggle-pan">
+                锁定画布移动
+            </button>
+            <button class="btn btn-outline-dark" id="btn-export-svg">
+                导出 SVG
+            </button>
+            <button class="btn btn-outline-dark" id="btn-export-pdf">
+                导出 PDF
+            </button>
+        </div>
+
+        <div class="border rounded p-3 mb-4 bg-light">
+            <h6 class="fw-bold mb-3">连线样式</h6>
+            <div class="mb-3">
+                <label class="form-label small mb-1">颜色</label>
+                <input type="color" class="form-control form-control-color" id="line-color" value="#2563eb" title="选择连线颜色">
+            </div>
+            <div class="mb-3">
+                <label class="form-label small mb-1">粗细 <span id="line-width-value">2</span></label>
+                <input type="range" class="form-range" id="line-width" min="1" max="8" step="0.5" value="2">
+            </div>
+            <div class="mb-1">
+                <label class="form-label small mb-1">透明度 <span id="line-opacity-value">0.7</span></label>
+                <input type="range" class="form-range" id="line-opacity" min="0.1" max="1" step="0.05" value="0.7">
+            </div>
+            <div class="small text-muted" id="style-hint">未选中具体连线时，这些参数会作为新连线默认样式。</div>
+        </div>
+
+        <div class="border rounded p-3 mb-4 bg-light">
+            <h6 class="fw-bold mb-3">树布局调整</h6>
+            <div class="mb-3">
+                <label class="form-label small mb-1">右树左右 <span id="layout-right-x-value">0</span></label>
+                <input type="range" class="form-range" id="layout-right-x" min="-1800" max="1800" step="10" value="0">
+            </div>
+            <div class="mb-1">
+                <label class="form-label small mb-1">右树上下 <span id="layout-right-y-value">0</span></label>
+                <input type="range" class="form-range" id="layout-right-y" min="-900" max="900" step="10" value="0">
+            </div>
+            <div class="small text-muted">只移动右侧树。调节后会立即重绘双树和连线，双击画布中的连线可直接删除。</div>
+        </div>
+
+        <div class="status-box mb-3" id="selection-status">
+            先分别选择左侧和右侧的 Workspace JSON 文件，再加载双树。当前是同一张合成画布；需要手动连线时，请先开启“手动连线模式”。
+        </div>
+
+        <h6 class="fw-bold mb-2">连线列表</h6>
+        <div id="connection-list" class="border rounded p-2" style="min-height: 120px; max-height: 260px; overflow-y: auto;"></div>
+    </aside>
+
+    <main class="tanglegram-stage">
+        <div class="stage-shell" id="stage-shell">
+            <div class="canvas-toolbar">
+                <div class="canvas-tree-meta">
+                    <div>
+                        <h6 class="canvas-tree-title" id="tree-title-1">左侧树</h6>
+                        <p class="canvas-tree-subtitle" id="tree-source-1">尚未加载</p>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" id="open-tree-1" disabled>单独打开</button>
+                </div>
+                <div class="canvas-tree-meta" style="justify-content:flex-end;">
+                    <div style="text-align:right;">
+                        <h6 class="canvas-tree-title" id="tree-title-2">右侧树</h6>
+                        <p class="canvas-tree-subtitle" id="tree-source-2">尚未加载</p>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" id="open-tree-2" disabled>单独打开</button>
+                </div>
+            </div>
+
+            <div class="canvas-board">
+                <svg id="combined-svg" class="combined-svg"></svg>
+            </div>
+
+            <div class="render-sandbox" aria-hidden="true">
+                <iframe id="tree-frame-1" title="Hidden left tree renderer"></iframe>
+                <iframe id="tree-frame-2" title="Hidden right tree renderer"></iframe>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div class="modal fade" id="workspaceModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">从 Workspace 选择树 JSON</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="accordion accordion-flush" id="workspaceAccordion">
+                    <div class="p-3 text-center text-muted">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                        Loading workspace...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/bootstrap.bundle.min.js"></script>
+<script type="module" src="/static/dist/js/tanglegramTree.js"></script>
+</body>
+</html>

@@ -1,5 +1,7 @@
-import { MainPlot } from "/static/xiaochiPlot/minJS/mainplot.min.js";
-import { TreeParser } from "/static/xiaochiPlot/minJS/treeParser.min.js";
+// @ts-nocheck
+
+import { MainPlot } from "./mainplot.ts";
+import { TreeParser } from "./treeParser.ts";
 const project_manager_T = `<div id="project-manager-box" style="padding: 0.5em;">
     <div class="row g-3 align-items-center" v-show="isShow">
   <div class="col-auto">

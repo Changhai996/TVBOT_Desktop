@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 const pi = Math.PI,
     tau = 2 * pi,
     epsilon = 1e-6,

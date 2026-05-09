@@ -3,295 +3,365 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tree Beautify (Local TVBOT)</title>
+    <title>TVBOT_Desktop - Advanced Phylogenetic Tree Visualization</title>
+    <link rel="shortcut icon" href="/static/xiaochiPlot/chiplot_favicon.ico" type="image/x-icon" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
         :root {
-            --primary-color: #10b981;
-            --primary-hover: #059669;
-            --bg-color: #f8fafc;
-            --text-dark: #0f172a;
-            --text-muted: #64748b;
+            --bg-color: #0b0f19;
+            --surface: #141a27;
+            --surface-hover: #1c2436;
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --secondary: #10b981;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
         }
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-dark);
-            -webkit-font-smoothing: antialiased;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
         }
+        /* Background Glow Effects */
+        .bg-glow {
+            position: fixed;
+            top: -20%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(0,0,0,0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+        .bg-glow-right {
+            position: fixed;
+            bottom: -20%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(16,185,129,0.1) 0%, rgba(0,0,0,0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+        /* Navbar */
         .navbar {
-            background: rgba(255, 255, 255, 0.8) !important;
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            background: rgba(11, 15, 25, 0.8) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
             padding: 1rem 0;
         }
-        .navbar-brand {
-            font-weight: 700;
+        .brand {
+            font-weight: 800;
+            letter-spacing: 0.5px;
             font-size: 1.5rem;
-            color: var(--text-dark) !important;
+            color: #fff !important;
+            text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
-        .navbar-brand i {
-            color: var(--primary-color);
+        .brand i {
+            color: var(--primary);
             font-size: 1.8rem;
+            text-shadow: 0 0 15px var(--primary-glow);
         }
-        .hero-section {
+        .version-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 3px 8px;
+            letter-spacing: 1px;
+        }
+        .nav-link {
+            color: var(--text-muted) !important;
+            font-weight: 500;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+        .nav-link:hover {
+            color: #fff !important;
+        }
+        /* Hero Section */
+        .hero {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
             padding: 8rem 0 5rem;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
             text-align: center;
-            position: relative;
-            overflow: hidden;
         }
-        .hero-title {
-            font-size: 3.5rem;
-            font-weight: 800;
-            letter-spacing: -0.025em;
+        .hero h1 {
+            font-size: 4.5rem;
+            font-weight: 900;
+            line-height: 1.1;
             margin-bottom: 1.5rem;
-            color: #0f172a;
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
         }
-        .hero-title span {
-            color: var(--primary-color);
-        }
-        .hero-subtitle {
+        .hero p {
             font-size: 1.25rem;
             color: var(--text-muted);
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto 3rem;
             line-height: 1.6;
         }
-        .btn-custom-primary {
-            background-color: var(--primary-color);
-            color: white;
-            font-weight: 600;
-            padding: 0.8rem 2rem;
-            border-radius: 50px;
-            border: none;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+        /* Grid */
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
         }
-        .btn-custom-primary:hover {
-            background-color: var(--primary-hover);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-        }
-        .btn-custom-secondary {
-            background-color: white;
-            color: var(--text-dark);
-            font-weight: 600;
-            padding: 0.8rem 2rem;
-            border-radius: 50px;
-            border: 1px solid #e2e8f0;
-            transition: all 0.3s ease;
-        }
-        .btn-custom-secondary:hover {
-            background-color: #f1f5f9;
-            transform: translateY(-2px);
-        }
-        .feature-card {
-            background: white;
-            border-radius: 16px;
+        .module-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
             padding: 2.5rem 2rem;
-            border: 1px solid rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
+            text-align: left;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
             height: 100%;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            background: radial-gradient(circle at top right, rgba(255,255,255,0.05) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s;
         }
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+        .module-card:hover {
+            transform: translateY(-8px);
+            background: var(--surface-hover);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            color: var(--text-main);
         }
-        .feature-icon {
-            width: 60px;
-            height: 60px;
-            background: #ecfdf5;
-            color: var(--primary-color);
-            border-radius: 14px;
+        .module-card:hover::before {
+            opacity: 1;
+        }
+        .icon-box {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.8rem;
+            font-size: 2rem;
             margin-bottom: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .feature-title {
+        .icon-beautify { color: #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
+        .icon-compare { color: #10b981; box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); }
+        .icon-future { color: #8b5cf6; box-shadow: 0 0 20px rgba(139, 92, 246, 0.2); }
+        
+        .module-card h3 {
+            font-size: 1.5rem;
             font-weight: 700;
-            font-size: 1.25rem;
             margin-bottom: 1rem;
         }
-        .feature-desc {
+        .module-card p {
             color: var(--text-muted);
             line-height: 1.6;
+            margin-bottom: 0;
+            font-size: 1rem;
         }
-        .tree-types-section {
-            padding: 5rem 0;
-            background: white;
-        }
-        .tree-type-card {
-            display: block;
-            text-decoration: none;
-            color: inherit;
-            background: #f8fafc;
-            border-radius: 16px;
-            overflow: hidden;
-            transition: all 0.3s;
-            border: 1px solid #e2e8f0;
-        }
-        .tree-type-card:hover {
-            transform: scale(1.02);
-            border-color: var(--primary-color);
-        }
-        .tree-type-img {
-            width: 100%;
-            height: 200px;
-            background-color: #e2e8f0;
+        .module-card .arrow {
+            margin-top: auto;
+            padding-top: 1.5rem;
             display: flex;
             align-items: center;
-            justify-content: center;
-            color: #94a3b8;
-            font-size: 3rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: color 0.3s;
         }
-        .tree-type-info {
-            padding: 1.5rem;
+        .module-card .arrow i {
+            margin-left: 8px;
+            transition: transform 0.3s;
+        }
+        .module-card:hover .arrow {
+            color: #fff;
+        }
+        .module-card:hover .arrow i {
+            transform: translateX(6px);
+        }
+        
+        /* Footer */
+        .footer {
+            border-top: 1px solid var(--border);
+            padding: 2rem 0;
             text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            background: rgba(0, 0, 0, 0.2);
         }
-        .tree-type-info h4 {
-            font-weight: 700;
-            margin: 0;
-            color: var(--text-dark);
+        .footer a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .footer a:hover {
+            color: #fff;
         }
     </style>
 </head>
 <body>
+    <div class="bg-glow"></div>
+    <div class="bg-glow-right"></div>
 
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="/">
+            <a class="brand" href="/">
                 <i class="bi bi-diagram-3-fill"></i>
-                Tree Beautify
+                TVBOT_Desktop
+                <span class="version-badge">v1.0.0</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                <ul class="navbar-nav align-items-center gap-3">
-                    <li class="nav-item">
-                        <a class="nav-link text-dark fw-medium" href="https://1996xjm.github.io/tvbot/" target="_blank">Documentation</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="btn btn-custom-primary btn-sm px-4 py-2" href="/myTrees.html">
-                            <i class="bi bi-folder2-open me-2"></i> My Workspace
-                        </a>
-                    </li>
-                </ul>
+            <div class="d-flex gap-3 align-items-center">
+                <a class="nav-link" href="/myTrees.html">
+                    <i class="bi bi-folder2-open me-2"></i><span data-i18n="nav_workspace">Workspace</span>
+                </a>
+                <a class="nav-link" href="https://github.com/Changhai996/TVBOT_Desktop" target="_blank">
+                    <i class="bi bi-github fs-5"></i>
+                </a>
+                <!-- Language Toggle Button -->
+                <a class="nav-link" id="lang-toggle" title="Switch Language">
+                    <i class="bi bi-translate fs-5"></i> <span id="lang-label" class="ms-1" style="font-size: 0.9rem;">中文</span>
+                </a>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
+    <main class="hero">
         <div class="container">
-            <h1 class="hero-title">Beautiful Phylogenetic Trees, <br><span>Fully Local & Private.</span></h1>
-            <p class="hero-subtitle">Annotate and customize your evolutionary trees with a data-driven engine. No data upload, no file size limits, complete privacy.</p>
-            <div class="d-flex justify-content-center gap-3">
-                <a href="/myTrees.html" class="btn btn-custom-primary">
-                    <i class="bi bi-grid-1x2-fill me-2"></i> Open Workspace
+            <h1 data-i18n="hero_title">Data-Driven Phylogenetic Tree Engine</h1>
+            <p data-i18n="hero_subtitle">Efficient, secure, and purely local advanced rendering and visual analysis tool for phylogenetic trees.<br>Transform your phylogenetic data into publication-quality graphics.</p>
+            
+            <div class="module-grid">
+                <!-- 核心入口 1: 树的美化 -->
+                <a href="/normalTree.html" class="module-card">
+                    <div class="icon-box icon-beautify">
+                        <i class="bi bi-palette-fill"></i>
+                    </div>
+                    <h3 data-i18n="mod1_title">Tree Beautification & Annotation</h3>
+                    <p data-i18n="mod1_desc">Unified visual editor. Supports seamless switching between normal, unrooted, and circular tree layouts, providing deep custom rendering of nodes and branches with layers.</p>
+                    <div class="arrow"><span data-i18n="mod1_btn">Enter Editor</span> <i class="bi bi-arrow-right"></i></div>
                 </a>
-                <a href="#create-tree" class="btn btn-custom-secondary">
-                    <i class="bi bi-plus-lg me-2"></i> Create New Tree
+
+                <!-- 核心入口 2: 树的比较 -->
+                <a href="/tanglegramTree.html" class="module-card">
+                    <div class="icon-box icon-compare">
+                        <i class="bi bi-bezier2"></i>
+                    </div>
+                    <h3 data-i18n="mod2_title">Dual-Tree Comparison (Tanglegram)</h3>
+                    <p data-i18n="mod2_desc">Import two trees side-by-side in the same canvas, supporting auto/manual mapping connections to intuitively present co-evolution and topological differences between species or gene trees.</p>
+                    <div class="arrow"><span data-i18n="mod2_btn">Enter Comparison</span> <i class="bi bi-arrow-right"></i></div>
+                </a>
+
+                <!-- 预留入口 3 -->
+                <a href="#" class="module-card" style="opacity: 0.6; cursor: default; pointer-events: none;">
+                    <div class="icon-box icon-future">
+                        <i class="bi bi-braces-asterisk"></i>
+                    </div>
+                    <h3 data-i18n="mod3_title">Batch Analysis & Pipelines</h3>
+                    <p data-i18n="mod3_desc">Planned functional module. Future support for batch data processing, scripted automated rendering, and report generation.</p>
+                    <div class="arrow"><span data-i18n="mod3_btn">Coming Soon</span> <i class="bi bi-three-dots"></i></div>
                 </a>
             </div>
         </div>
-    </section>
+    </main>
 
-    <!-- Features Section -->
-    <section class="py-5">
+    <footer class="footer">
         <div class="container">
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="bi bi-shield-check"></i>
-                        </div>
-                        <h3 class="feature-title">100% Local Privacy</h3>
-                        <p class="feature-desc">All processing happens directly on your machine. Your sensitive genetic data and tree files never leave your computer.</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="bi bi-speedometer2"></i>
-                        </div>
-                        <h3 class="feature-title">No Upload Limits</h3>
-                        <p class="feature-desc">Bypass the strict file size limits and network timeouts of online tools. Handle massive trees with thousands of nodes effortlessly.</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="bi bi-hdd-network"></i>
-                        </div>
-                        <h3 class="feature-title">Persistent Workspace</h3>
-                        <p class="feature-desc">Save your drawing states locally into custom project folders. Easily resume, copy, or batch-export your work anytime.</p>
-                    </div>
-                </div>
+            <div class="mb-2">
+                <i class="bi bi-code-slash me-1"></i> TVBOT_Desktop
             </div>
-        </div>
-    </section>
-
-    <!-- Create Tree Section -->
-    <section id="create-tree" class="tree-types-section">
-        <div class="container">
-            <div class="text-center mb-5">
-                <h2 class="fw-bold mb-3">Choose a Tree Layout</h2>
-                <p class="text-muted">Start visualizing your data with one of our specialized layouts.</p>
+            <div>
+                <span data-i18n="footer_open">Open source on</span> <a href="https://github.com/Changhai996/TVBOT_Desktop" target="_blank"><i class="bi bi-github mx-1"></i>Changhai996/TVBOT_Desktop</a>
             </div>
-            <div class="row justify-content-center g-4">
-                <div class="col-md-4">
-                    <a href="/normalTree.html" class="tree-type-card">
-                        <div class="tree-type-img">
-                            <i class="bi bi-bar-chart-steps" style="transform: rotate(90deg);"></i>
-                        </div>
-                        <div class="tree-type-info">
-                            <h4>Normal / Rectangular</h4>
-                        </div>
-                    </a>
-                </div>
-                <div class="col-md-4">
-                    <a href="/circleTree.html" class="tree-type-card">
-                        <div class="tree-type-img">
-                            <i class="bi bi-bullseye"></i>
-                        </div>
-                        <div class="tree-type-info">
-                            <h4>Circular Layout</h4>
-                        </div>
-                    </a>
-                </div>
-                <div class="col-md-4">
-                    <a href="/unrootedTree.html" class="tree-type-card">
-                        <div class="tree-type-img">
-                            <i class="bi bi-asterisk"></i>
-                        </div>
-                        <div class="tree-type-info">
-                            <h4>Unrooted Layout</h4>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="py-4 bg-light mt-5 border-top">
-        <div class="container text-center text-muted">
-            <p class="mb-1 fw-medium">&copy; Tree Beautify (Local TVBOT)</p>
-            <small>Based on the original TVBOT project. <a href="https://github.com/1996xjm/TVBOT" target="_blank" class="text-decoration-none">Original Repo</a></small>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const translations = {
+            en: {
+                nav_workspace: "Workspace",
+                hero_title: "Data-Driven Phylogenetic Tree Engine",
+                hero_subtitle: "Efficient, secure, and purely local advanced rendering and visual analysis tool for phylogenetic trees.<br>Transform your phylogenetic data into publication-quality graphics.",
+                mod1_title: "Tree Beautification & Annotation",
+                mod1_desc: "Unified visual editor. Supports seamless switching between normal, unrooted, and circular tree layouts, providing deep custom rendering of nodes and branches with layers.",
+                mod1_btn: "Enter Editor",
+                mod2_title: "Dual-Tree Comparison (Tanglegram)",
+                mod2_desc: "Import two trees side-by-side in the same canvas, supporting auto/manual mapping connections to intuitively present co-evolution and topological differences between species or gene trees.",
+                mod2_btn: "Enter Comparison",
+                mod3_title: "Batch Analysis & Pipelines",
+                mod3_desc: "Planned functional module. Future support for batch data processing, scripted automated rendering, and report generation.",
+                mod3_btn: "Coming Soon",
+                footer_open: "Open source on"
+            },
+            zh: {
+                nav_workspace: "工作区 (Workspace)",
+                hero_title: "数据驱动的进化树引擎",
+                hero_subtitle: "高效、安全、纯本地运行的系统发生树高级渲染与可视化分析工具。<br>将您的系统发生数据转化为出版级的高质量图形。",
+                mod1_title: "系统树美化与注释",
+                mod1_desc: "统一的可视化编辑器。支持普通树、无根树、环形树等多种布局的无缝切换，提供图层化的节点与分支深度自定义渲染。",
+                mod1_btn: "进入编辑器",
+                mod2_title: "双树拓扑比较 (Tanglegram)",
+                mod2_desc: "在同一画布中并排导入两棵树，支持自动化/手动建立映射连线，直观呈现物种或基因树之间的协同进化与拓扑差异。",
+                mod2_btn: "进入比较模块",
+                mod3_title: "批量分析与管道",
+                mod3_desc: "规划中的功能模块。未来将支持批量数据处理、脚本化自动化渲染与报告生成等高级能力。",
+                mod3_btn: "敬请期待",
+                footer_open: "开源于"
+            }
+        };
+
+        // Initialize language from localStorage or default to 'en'
+        let currentLang = localStorage.getItem('tvbot_lang') || 'en';
+
+        function applyLanguage(lang) {
+            document.documentElement.lang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    el.innerHTML = translations[lang][key];
+                }
+            });
+            // Update the toggle button text to show the *alternative* language
+            document.getElementById('lang-label').innerText = lang === 'en' ? '中文' : 'English';
+        }
+
+        document.getElementById('lang-toggle').addEventListener('click', () => {
+            currentLang = currentLang === 'en' ? 'zh' : 'en';
+            localStorage.setItem('tvbot_lang', currentLang);
+            applyLanguage(currentLang);
+        });
+
+        // Apply initially
+        applyLanguage(currentLang);
+    </script>
 </body>
 </html>

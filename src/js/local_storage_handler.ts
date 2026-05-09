@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 // Local storage handler to save and load data from local Flask server
 (function() {
     const LOCAL_API_SAVE = '/api/save_tree';

@@ -1,16 +1,34 @@
+# Node.js
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
 __pycache__/
-*.pyc
-.DS_Store
-data/
+*.py[cod]
+*$py.class
+.venv/
 venv/
 env/
-node_modules/
+ENV/
 
-# personal config / dev scripts
-pixi.toml
-pixi.lock
-replace_html.py
+# Pixi
+.pixi/
 
-# pixi environments
-.pixi/*
-!.pixi/config.toml
+# MacOS
+.DS_Store
+
+# Local Data (VERY IMPORTANT)
+data/
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.bak

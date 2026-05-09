@@ -4,6 +4,10 @@ A high-performance, local application for phylogenetic tree visualization, annot
 
 Designed for researchers who require data privacy, fast rendering of massive datasets, and advanced manual annotation capabilities without the constraints of web-based tools.
 
+## Version
+
+Current local release: **v1.0.0**
+
 ## Key Features
 
 **Performance & Privacy**
