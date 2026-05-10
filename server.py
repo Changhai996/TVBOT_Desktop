@@ -139,7 +139,23 @@ def get_tree_list():
                     # Add trees from default folder to default project
                     for f in os.listdir(entry.path):
                         if f.endswith('.json'):
-                            trees.append({"treeName": f.replace('.json', ''), "projectId": "default"})
+                            full_path = os.path.join(entry.path, f)
+                            mtime = os.path.getmtime(full_path)
+                            formatted_time = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
+                            plot_type = 'normalTree'
+                            try:
+                                with open(full_path, 'r') as jf:
+                                    data = json.load(jf)
+                                    plot_type = data.get('plotType', 'normalTree')
+                            except:
+                                pass
+                            trees.append({
+                                "treeName": f.replace('.json', ''), 
+                                "projectId": "default",
+                                "mtime": mtime,
+                                "time_str": formatted_time,
+                                "plotType": plot_type
+                            })
                     continue
                 
                 # Add this directory as a project
@@ -148,10 +164,42 @@ def get_tree_list():
                 # Scan trees in this project folder
                 for f in os.listdir(entry.path):
                     if f.endswith('.json'):
-                        trees.append({"treeName": f.replace('.json', ''), "projectId": project_name})
+                        full_path = os.path.join(entry.path, f)
+                        mtime = os.path.getmtime(full_path)
+                        formatted_time = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
+                        plot_type = 'normalTree'
+                        try:
+                            with open(full_path, 'r') as jf:
+                                data = json.load(jf)
+                                plot_type = data.get('plotType', 'normalTree')
+                        except:
+                            pass
+                        trees.append({
+                            "treeName": f.replace('.json', ''), 
+                            "projectId": project_name,
+                            "mtime": mtime,
+                            "time_str": formatted_time,
+                            "plotType": plot_type
+                        })
             elif entry.is_file() and entry.name.endswith('.json'):
                 # Files directly in DATA_DIR go into 'default'
-                trees.append({"treeName": entry.name.replace('.json', ''), "projectId": "default"})
+                full_path = entry.path
+                mtime = os.path.getmtime(full_path)
+                formatted_time = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
+                plot_type = 'normalTree'
+                try:
+                    with open(full_path, 'r') as jf:
+                        data = json.load(jf)
+                        plot_type = data.get('plotType', 'normalTree')
+                except:
+                    pass
+                trees.append({
+                    "treeName": entry.name.replace('.json', ''), 
+                    "projectId": "default",
+                    "mtime": mtime,
+                    "time_str": formatted_time,
+                    "plotType": plot_type
+                })
             
     return jsonify({
         "projectList": projects,

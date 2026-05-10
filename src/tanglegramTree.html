@@ -126,7 +126,12 @@
     <aside class="tanglegram-sidebar">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold mb-0" data-i18n="tg_title">Dual-Tree Comparison</h5>
-            <button id="lang-toggle" class="btn btn-sm btn-outline-secondary" style="font-size: 0.8rem;">🌐 中文</button>
+            <div class="d-flex gap-2">
+                <button id="btn-save-workspace" class="btn btn-sm btn-primary shadow-sm" style="font-size: 0.8rem;">
+                    <i class="bi bi-save me-1"></i><span data-i18n="tg_save">Save</span>
+                </button>
+                <button id="lang-toggle" class="btn btn-sm btn-outline-secondary" style="font-size: 0.8rem;">🌐 中文</button>
+            </div>
         </div>
 
         <div class="mb-4">
@@ -273,6 +278,7 @@
     const tgTranslations = {
         en: {
             tg_title: "Dual-Tree Comparison",
+            tg_save: "Save to Workspace",
             tg_left_tree: "Left Tree",
             tg_right_tree: "Right Tree",
             tg_select_workspace: "Select JSON from Workspace",
@@ -304,6 +310,7 @@
         },
         zh: {
             tg_title: "双树比较",
+            tg_save: "保存到工作区",
             tg_left_tree: "左侧树",
             tg_right_tree: "右侧树",
             tg_select_workspace: "从 Workspace 选择 JSON",

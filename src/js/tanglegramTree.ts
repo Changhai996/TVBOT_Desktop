@@ -579,16 +579,10 @@ async function exportCombinedPdf() {
         exportSvg.querySelectorAll('#tg-tree-2 text').forEach((textEl) => {
             const anchor = textEl.getAttribute('text-anchor') || '';
             const baseX = getNumericSvgAttr(textEl, 'x', 0);
+            const dx = getNumericSvgAttr(textEl, 'dx', 0);
             const baseShift = anchor === 'end' ? -8 : 8;
-            textEl.setAttribute('x', String(baseX + baseShift));
+            textEl.setAttribute('x', String(baseX + dx + baseShift));
             textEl.setAttribute('dx', '0');
-
-            const txt = (textEl.textContent || '').trim();
-            if (/^\([^()]+\)$/.test(txt)) {
-                const x = getNumericSvgAttr(textEl, 'x', 0);
-                const bracketShift = anchor === 'end' ? -10 : 10;
-                textEl.setAttribute('x', String(x + bracketShift));
-            }
         });
         await doc.svg(exportSvg, { width, height });
         doc.save(`${makeExportBaseName()}.pdf`);
@@ -708,7 +702,7 @@ function normalizeMirroredRightTreeLabels(wrapper) {
         }
 
         const dx = getNumericSvgAttr(textEl, 'dx', 0);
-        textEl.setAttribute('dx', String(dx - 2));
+        textEl.setAttribute('dx', String(-dx - 2));
         textEl.style.transform = '';
         textEl.style.transformOrigin = '';
         textEl.style.transformBox = '';
@@ -1159,21 +1153,38 @@ window.openWorkspaceModal = function(treeNum) {
 
             projects.forEach((project, index) => {
                 const projectName = project.projectId;
-                const trees = allTrees.filter((item) => item.projectId === projectName).map((item) => item.treeName);
-            const expanded = '';
-            const collapsedBtn = 'collapsed';
+                const trees = allTrees.filter((item) => item.projectId === projectName);
+                const expanded = '';
+                const collapsedBtn = 'collapsed';
 
                 let bodyHtml = '<div class="list-group list-group-flush">';
                 if (trees.length === 0) {
                     bodyHtml += '<div class="list-group-item text-muted small py-2">Empty project</div>';
                 } else {
-                    trees.forEach((treeName) => {
+                    // Header for columns
+                    bodyHtml += `
+                        <div class="list-group-item bg-light text-muted small fw-semibold d-flex align-items-center py-2" style="font-size: 0.8rem;">
+                            <div class="flex-grow-1">Name</div>
+                            <div style="width: 140px;">Date Modified</div>
+                            <div style="width: 80px;">Layout</div>
+                        </div>
+                    `;
+                    
+                    // Sort trees by mtime descending by default
+                    trees.sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
+                    
+                    trees.forEach((tree) => {
                         bodyHtml += `
-                            <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2"
+                            <button type="button" class="list-group-item list-group-item-action d-flex align-items-center py-2"
                                 data-project-id="${escapeHtml(projectName)}"
-                                data-tree-name="${escapeHtml(treeName)}">
-                                <span class="text-truncate" style="max-width: 260px;" title="${escapeHtml(treeName)}">${escapeHtml(treeName)}</span>
-                                <span class="badge bg-success rounded-pill">选择</span>
+                                data-tree-name="${escapeHtml(tree.treeName)}">
+                                <div class="flex-grow-1 text-truncate pe-2" title="${escapeHtml(tree.treeName)}">
+                                    <i class="bi bi-file-earmark-text text-primary me-2"></i>${escapeHtml(tree.treeName)}
+                                </div>
+                                <div style="width: 140px;" class="text-muted small text-truncate">${escapeHtml(tree.time_str || '')}</div>
+                                <div style="width: 80px;" class="text-muted small">
+                                    <span class="badge bg-secondary bg-opacity-25 text-light">${escapeHtml((tree.plotType || 'normal').replace('Tree', ''))}</span>
+                                </div>
                             </button>
                         `;
                     });
@@ -1181,9 +1192,10 @@ window.openWorkspaceModal = function(treeNum) {
                 bodyHtml += '</div>';
 
                 container.insertAdjacentHTML('beforeend', `
-                    <div class="accordion-item">
+                    <div class="accordion-item" style="border-color: rgba(255,255,255,0.1); background: var(--surface);">
                         <h2 class="accordion-header" id="heading-${index}">
-                            <button class="accordion-button py-2 ${collapsedBtn}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${index}">
+                            <button class="accordion-button py-2 ${collapsedBtn}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${index}" style="background: rgba(255,255,255,0.02); color: var(--text-main);">
+                                <i class="bi bi-folder-fill text-warning me-2"></i>
                                 <span class="fw-bold">${escapeHtml(project.projectName || projectName)}</span>
                                 <span class="badge bg-secondary ms-2 rounded-pill">${trees.length}</span>
                             </button>
@@ -1381,3 +1393,149 @@ updateManualModeButton();
 updateBoxDeleteModeButton();
 updatePanLockButton();
 setStatus('先分别选择左侧和右侧的 Workspace JSON 文件，再加载双树。当前是同一张合成画布；支持平移/缩放，连线端点圆点会直接显示。');
+
+// ---------------------------
+// Save & Load Tanglegram logic
+// ---------------------------
+
+async function saveTanglegram() {
+    if (!selectedTrees[1] || !selectedTrees[2]) {
+        alert(currentLang === 'en' ? 'Please load both trees first.' : '请先加载双树。');
+        return;
+    }
+    
+    if (selectedTrees[1].projectId === 'local' || selectedTrees[2].projectId === 'local') {
+        alert(currentLang === 'en' ? 'Cannot save local files. Please import trees from Workspace.' : '包含本地文件，无法保存到 Workspace。请从 Workspace 导入树。');
+        return;
+    }
+
+    const treeName = prompt(currentLang === 'en' ? 'Enter a name to save this comparison:' : '请输入保存的文件名：', 'my_comparison');
+    if (!treeName) return;
+
+    const payload = {
+        plotType: 'tanglegramTree',
+        leftTree: {
+            projectId: selectedTrees[1].projectId,
+            treeName: selectedTrees[1].treeName
+        },
+        rightTree: {
+            projectId: selectedTrees[2].projectId,
+            treeName: selectedTrees[2].treeName
+        },
+        connections: connections.map(c => ({
+            leftKey: c.left.key,
+            rightKey: c.right.key,
+            style: { ...c.style }
+        })),
+        layoutState: { ...layoutState },
+        defaultConnectionStyle: { ...defaultConnectionStyle }
+    };
+
+    try {
+        // Find default project logic: TVBOT saves to current projectId from URL or 'default'
+        const urlParams = new URLSearchParams(window.location.search);
+        let saveProject = urlParams.get('projectId') || 'default';
+        if (saveProject === 'local') saveProject = 'default';
+
+        const res = await fetch('/api/save_tree', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                projectId: saveProject,
+                treeName: treeName,
+                jsonData: JSON.stringify(payload)
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(currentLang === 'en' ? 'Saved successfully!' : '保存成功！');
+            // update URL so reload works
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('originalJsonDataUri', `/api/get_tree/${encodeURIComponent(saveProject)}/${encodeURIComponent(treeName)}.json`);
+            newUrl.searchParams.set('projectId', saveProject);
+            newUrl.searchParams.set('treeTitle', treeName);
+            window.history.replaceState({}, '', newUrl.toString());
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (err) {
+        alert('Failed to save: ' + err.message);
+    }
+}
+
+if (document.getElementById('btn-save-workspace')) {
+    document.getElementById('btn-save-workspace').addEventListener('click', saveTanglegram);
+}
+
+// Check if we need to load an existing tanglegram JSON
+async function initTanglegramFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const dataUri = urlParams.get('originalJsonDataUri');
+    if (!dataUri) return;
+
+    try {
+        const res = await fetch(dataUri);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const payload = await res.json();
+        
+        if (payload.plotType !== 'tanglegramTree') {
+            console.warn('Loaded JSON is not a tanglegramTree');
+            return;
+        }
+
+        // Restore trees
+        const [leftRes, rightRes] = await Promise.all([
+            fetchTreePayload(payload.leftTree.projectId, payload.leftTree.treeName).catch(e => null),
+            fetchTreePayload(payload.rightTree.projectId, payload.rightTree.treeName).catch(e => null)
+        ]);
+
+        if (leftRes) {
+            setWorkspaceSelection(1, payload.leftTree.projectId, payload.leftTree.treeName, leftRes.payload);
+        }
+        if (rightRes) {
+            setWorkspaceSelection(2, payload.rightTree.projectId, payload.rightTree.treeName, rightRes.payload);
+        }
+
+        if (payload.layoutState) {
+            Object.assign(layoutState, payload.layoutState);
+            syncLayoutInputsFromState();
+        }
+        if (payload.defaultConnectionStyle) {
+            Object.assign(defaultConnectionStyle, payload.defaultConnectionStyle);
+        }
+
+        if (leftRes && rightRes) {
+            await loadSelectedTrees();
+            
+            // After loading, restore connections
+            if (payload.connections && payload.connections.length > 0) {
+                const leftMap = new Map();
+                getCombinedTargets(1).forEach(r => leftMap.set(r.key, r));
+                const rightMap = new Map();
+                getCombinedTargets(2).forEach(r => rightMap.set(r.key, r));
+
+                connections = [];
+                payload.connections.forEach(c => {
+                    const left = leftMap.get(c.leftKey);
+                    const right = rightMap.get(c.rightKey);
+                    if (left && right) {
+                        connections.push({ left, right, style: c.style });
+                    }
+                });
+                
+                if (connections.length > 0) {
+                    selectedConnectionIndex = 0;
+                }
+                updateConnectionList();
+                drawConnections();
+                syncStyleControlsFromSelection();
+            }
+        }
+    } catch (err) {
+        console.error('Failed to init from URL:', err);
+    }
+}
+
+// Call init on load
+initTanglegramFromUrl();
+
