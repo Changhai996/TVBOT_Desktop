@@ -5,6 +5,5 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true
   },
-  "include": ["src/core/**/*.ts"]
+  "include": ["src/core/**/*.ts", "src/types/**/*.d.ts"]
 }
-

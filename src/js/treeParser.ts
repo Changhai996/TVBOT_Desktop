@@ -1,8 +1,10 @@
-// @ts-nocheck
-
 class TreeParser {
+  nodeArr: any[] = [];
+  root: any = null;
+
   constructor() {}
-  identifyTreeFile(t) {
+
+  identifyTreeFile(t: any) {
     if ("object" == typeof t)
       return this.parsePhyloxml(t);
     {
@@ -12,7 +14,7 @@ class TreeParser {
         : this.parseNewick(t);
     }
   }
-  parseNewick(e, A) {
+  parseNewick(e: string, A?: Record<string, string>) {
     this.nodeArr = [];
     const v = this;
     e = (e = (e = (e = e.replaceAll("\n", "").replaceAll("\r", "")).slice(
@@ -21,33 +23,45 @@ class TreeParser {
       ? e.slice(0, -1)
       : e;
     let W = 0;
-    let t = (function t(r, e = void 0) {
+    const getChar = (text: string, idx: number) => text.charAt(idx);
+    const trimArrInPlace = (arr: (string | undefined)[]) => {
+      for (let i = 0; i < arr.length; i++) {
+        const val = arr[i];
+        if (val != null) arr[i] = val.trim();
+      }
+    };
+    const stripBracketSuffix = (raw: string) => {
+      const m = raw.match(/^[^[]*/g);
+      return m && m[0] != null ? m[0] : raw;
+    };
+
+    let t = (function t(r: string, e: any = void 0) {
       let l = 0,
         i = !1,
         s = "";
       for (let e = 0, t = 0, n = 0; n < r.length; n++)
-        if (!["'", '"'].includes(r[n]) || i) {
+        if (!["'", '"'].includes(getChar(r, n)) || i) {
           if (
-            (r[n] == s && i && (i = !1),
-            "(" != r[n] || i || e++,
-            ")" != r[n] || i || t++,
+            (getChar(r, n) == s && i && (i = !1),
+            "(" != getChar(r, n) || i || e++,
+            ")" != getChar(r, n) || i || t++,
             e == t)
           ) {
             l = n;
             break;
           }
-        } else ((i = !0), (s = r[n]));
-      let n = r.slice(l + 1).split(":");
-      for (let e = 0; e < n.length; e++) n[e] = n[e].trim();
+        } else ((i = !0), (s = getChar(r, n)));
+      let n: (string | undefined)[] = r.slice(l + 1).split(":");
+      trimArrInPlace(n);
       if ((1 == n.length && n.push(void 0), n[1])) {
         let e = n[1].match(/\[[0-9.]*\]/);
         e &&
           ((n[0] = e[0].slice(1, -1)),
           console.log("处理bt值隐藏在[]里面的情况", e, n));
       }
-      let h = {
+      let h: any = {
         name: n[0],
-        length: n[1] ? Number(n[1].match(/^[^[]*/g)[0]) : Number(n[1]),
+        length: n[1] ? Number(stripBracketSuffix(n[1])) : Number(n[1]),
         btArr: [],
         children: [],
         nodeIndex: `N${W}`,
@@ -55,29 +69,35 @@ class TreeParser {
         parent: e,
       };
       if ((v.nodeArr.push(h), W++, "" != n[0])) {
-        var a = n[0].match(/^\d+(\.\d+)?\/\d+(\.\d+)?$/);
-        n[0].split("/").forEach((e) => {
+        const n0 = String(n[0] ?? "");
+        var a = n0.match(/^\d+(\.\d+)?\/\d+(\.\d+)?$/);
+        n0.split("/").forEach((e: string) => {
           isNaN(Number(e)) || h.btArr.push(Number(e));
         });
-        let e = n[0].match(/\[&.*\]/);
+        let e = n0.match(/\[&.*\]/);
         if (e) {
           var o = e[0].slice(2, -1);
           let t = [],
             n = 0,
             r = 0,
-            l = {};
-          var d = (e) => {
+            l: Record<string, any> = {};
+          var d = (e: any[]) => {
             let t = e.join("").split("=");
-            t.length < 2 ||
-              (t[1].startsWith("{")
-                ? (l[t[0]] = t[1]
-                    .slice(1, -1)
-                    .split(",")
-                    .map((e) => Number(e)))
-                : ((e = t[1].startsWith('"')
-                    ? Number(t[1].slice(1, -1))
-                    : Number(t[1])),
-                  (l[t[0]] = isNaN(e) ? t[1].slice(1, -1) : e)));
+            if (t.length < 2) return;
+            const key = t[0];
+            const rhs = t[1];
+            if (!key || rhs == null) return;
+            if (rhs.startsWith("{")) {
+              l[key] = rhs
+                .slice(1, -1)
+                .split(",")
+                .map((e: any) => Number(e));
+              return;
+            }
+            const parsedVal = rhs.startsWith('"')
+              ? Number(rhs.slice(1, -1))
+              : Number(rhs);
+            l[key] = isNaN(parsedVal) ? rhs.slice(1, -1) : parsedVal;
           };
           for (let e = 0; e < o.length; e++)
             ("," == o[e]
@@ -89,13 +109,13 @@ class TreeParser {
           h.otherProperty_L = l;
         } else
           null == a &&
-            isNaN(Number(n[0])) &&
+            isNaN(Number(n0)) &&
             ((h.hasInternalNodeID = !0),
-            (h.internalNodeID = n[0]),
-            (h.uniformNodeId = n[0]));
+            (h.internalNodeID = n0),
+            (h.uniformNodeId = n0));
       }
       var c = r.slice(0, l + 1);
-      let m = [],
+      let m: string[] = [],
         p = 0,
         u = 0,
         f = !1,
@@ -103,33 +123,33 @@ class TreeParser {
         g = 0,
         b = 0;
       for (let e = 0; e < c.length; e++)
-        if ("(" == c[e]) (m.push(c[e]), f || p++);
-        else if ("[" == c[e]) (m.push(c[e]), g++);
-        else if ("]" == c[e]) (m.push(c[e]), b++);
-        else if ("," == c[e])
+        if ("(" == getChar(c, e)) (m.push(getChar(c, e)), f || p++);
+        else if ("[" == getChar(c, e)) (m.push(getChar(c, e)), g++);
+        else if ("]" == getChar(c, e)) (m.push(getChar(c, e)), b++);
+        else if ("," == getChar(c, e))
           if (p - u == 1 && g == b) {
             let n = m.slice(1).join("").trim();
             if (((m = m.slice(0, 1)), n.startsWith("(")))
               h.children.push(t(n, h));
             else {
-              let t = [];
+              let t: (string | undefined)[] = [];
               if (n.startsWith("'") || n.startsWith('"')) {
                 console.log(n);
-                var I = n[0],
-                  I = n.lastIndexOf(I);
-                ((t[0] = n.slice(1, I)),
+                const quote = n.charAt(0);
+                const quoteIdx = n.lastIndexOf(quote);
+                ((t[0] = n.slice(1, quoteIdx)),
                   (t[1] =
-                    I == n.length - 1
+                    quoteIdx == n.length - 1
                       ? void 0
                       : n.slice(n.lastIndexOf(":") + 1)));
               } else {
                 t = n.split(":");
-                for (let e = 0; e < t.length; e++) t[e] = t[e].trim();
+                trimArrInPlace(t);
               }
               1 == t.length && t.push(void 0);
-              let e = {
-                name: t[0].match(/^[^[]*/g)[0],
-                length: t[1] ? Number(t[1].match(/^[^[]*/g)[0]) : Number(t[1]),
+              let e: any = {
+                name: stripBracketSuffix(String(t[0] ?? "")),
+                length: t[1] ? Number(stripBracketSuffix(t[1])) : Number(t[1]),
                 nodeIndex: `N${W}`,
                 parent: h,
               };
@@ -139,31 +159,31 @@ class TreeParser {
                 v.nodeArr.push(e),
                 W++);
             }
-          } else m.push(c[e]);
+          } else m.push(getChar(c, e));
         else
-          ")" == c[e]
-            ? (m.push(c[e]), f || u++)
-            : ["'", '"'].includes(c[e]) && !f
-              ? ((f = !0), m.push(c[e]), (N = c[e]))
-              : (c[e] == N && f && (f = !1), m.push(c[e]));
+          ")" == getChar(c, e)
+            ? (m.push(getChar(c, e)), f || u++)
+            : ["'", '"'].includes(getChar(c, e)) && !f
+              ? ((f = !0), m.push(getChar(c, e)), (N = getChar(c, e)))
+              : (getChar(c, e) == N && f && (f = !1), m.push(getChar(c, e)));
       let x = m.slice(1, m.lastIndexOf(")")).join("").trim();
       if (x.startsWith("(")) h.children.push(t(x, h));
       else {
-        let t = [];
-        if (x.startsWith("'") || x.startsWith('"'))
-          ((a = x[0]),
-            (a = x.lastIndexOf(a)),
-            (t[0] = x.slice(1, a)),
-            (t[1] =
-              a == x.length - 1 ? void 0 : x.slice(x.lastIndexOf(":") + 1)));
+        let t: (string | undefined)[] = [];
+        if (x.startsWith("'") || x.startsWith('"')) {
+          const quote = x.charAt(0);
+          const quoteIdx = x.lastIndexOf(quote);
+          t[0] = x.slice(1, quoteIdx);
+          t[1] = quoteIdx == x.length - 1 ? void 0 : x.slice(x.lastIndexOf(":") + 1);
+        }
         else {
           t = x.split(":");
-          for (let e = 0; e < t.length; e++) t[e] = t[e].trim();
+          trimArrInPlace(t);
         }
         1 == t.length && t.push(void 0);
-        let e = {
-          name: t[0].match(/^[^[]*/g)[0],
-          length: t[1] ? Number(t[1].match(/^[^[]*/g)[0]) : Number(t[1]),
+        let e: any = {
+          name: stripBracketSuffix(String(t[0] ?? "")),
+          length: t[1] ? Number(stripBracketSuffix(t[1])) : Number(t[1]),
           nodeIndex: `N${W}`,
           parent: h,
         };
@@ -175,23 +195,27 @@ class TreeParser {
       }
       return h;
     })(e);
-    if ((isNaN(t.length) && (t.length = 0), "otherProperty_L" in t))
-      for (var n in t.otherProperty_L)
-        n.includes("95%") &&
-          (("95%" != n && "height_95%_HPD" != n && "95%HPD" != n) ||
-            ((n = t.otherProperty_L[n]),
-            (t.length = Number((((n[1] - n[0]) / 3) * 2).toFixed(10)))),
-          (t.isDivergenceTimeTree = !0));
+    const rootAny: any = t as any;
+    if ((isNaN(rootAny.length) && (rootAny.length = 0), "otherProperty_L" in rootAny)) {
+      for (const key in rootAny.otherProperty_L) {
+        if (!key.includes("95%")) continue;
+        if (key === "95%" || key === "height_95%_HPD" || key === "95%HPD") {
+          const range = rootAny.otherProperty_L[key];
+          rootAny.length = Number((((range[1] - range[0]) / 3) * 2).toFixed(10));
+          rootAny.isDivergenceTimeTree = !0;
+        }
+      }
+    }
     return ((this.root = t), t);
   }
-  parseNexus(t) {
+  parseNexus(t: string[]) {
     let r = !1,
       l = !1,
       i = !1,
-      s = {},
-      h = [];
+      s: Record<string, string> = {},
+      h: any[] = [];
     for (let e = 0; e < t.length; e++) {
-      let n = t[e].trim();
+      let n = String(t[e] ?? "").trim();
       if (n.toUpperCase().startsWith("BEGIN TREE")) (console.log(n), (r = !0));
       else {
         if (r && n.toUpperCase().startsWith("END;")) {
@@ -205,16 +229,19 @@ class TreeParser {
             if (
               (e &&
                 l &&
-                (s[e[1]] =
-                  e[2].endsWith(",") || e[2].endsWith(";")
-                    ? e[2].slice(0, -1)
-                    : e[2]),
+                (() => {
+                  const k = e[1];
+                  const v = e[2];
+                  if (!k || v == null) return;
+                  const raw = String(v);
+                  s[String(k)] = raw.endsWith(",") || raw.endsWith(";") ? raw.slice(0, -1) : raw;
+                })(),
               n.toUpperCase().startsWith("TREE") ||
                 n.toUpperCase().startsWith("UTREE"))
             ) {
               let e = n.match(/tree (.+) =/i),
                 t = "";
-              ((t = e ? e[1].trim() : `tree${h.length + 1}`),
+              ((t = e && e[1] ? e[1].trim() : `tree${h.length + 1}`),
                 h.push({
                   name: t,
                   newick: -1 != n.indexOf("(") ? n.slice(n.indexOf("(")) : "",
@@ -228,14 +255,14 @@ class TreeParser {
     }
     return (console.log(h), console.log(s), this.parseNewick(h[0].newick, s));
   }
-  parsePhyloxml(e) {
+  parsePhyloxml(e: any) {
     const s = this;
     this.nodeArr = [];
-    let h = {},
+    let h: Record<string, number> = {},
       a = 0;
-    let t = (function r(e, t = void 0) {
-      let n = e.selectChildren(),
-        l = {
+    let t = (function r(e: any, t: any = void 0) {
+      let n: any = e.selectChildren(),
+        l: any = {
           name: "",
           length:
             null != e.attr("branch_length")
@@ -247,9 +274,9 @@ class TreeParser {
           parent: t,
         };
       (a++, s.nodeArr.push(l));
-      let i = [];
+      let i: any[] = [];
       return (
-        n.each(function () {
+        n.each(function (this: any) {
           let e = d3.select(this),
             t = e.node();
           var n = t.tagName;
@@ -257,7 +284,7 @@ class TreeParser {
             case "name":
               ((l.name = t.innerHTML.trim()),
                 l.name in h
-                  ? (h[l.name]++, (l.name = `${l.name}${h[l.name]}`))
+                  ? ((h[l.name] = (h[l.name] ?? 0) + 1), (l.name = `${l.name}${h[l.name]}`))
                   : (h[l.name] = 0));
               break;
             case "clade":
@@ -269,7 +296,7 @@ class TreeParser {
             case "taxonomy":
               ((l.name = e.select("scientific_name").text().trim()),
                 l.name in h
-                  ? (h[l.name]++, (l.name = `${l.name}${h[l.name]}`))
+                  ? ((h[l.name] = (h[l.name] ?? 0) + 1), (l.name = `${l.name}${h[l.name]}`))
                   : (h[l.name] = 0));
               break;
             case "confidence":
@@ -282,20 +309,20 @@ class TreeParser {
     })(d3.select(e).select("phylogeny").selectChildren("clade"));
     return (isNaN(t.length) && (t.length = 0), (this.root = t), t);
   }
-  reRoot(t, e = 0.5) {
+  reRoot(t: any, e = 0.5) {
     var n = this.nodeArr.findIndex((e) => e.nodeIndex == t);
     console.log("nodeIndex", n);
     var r,
       l = this.nodeArr[n];
     if ((console.log(t, l), "N0" == t)) return l;
-    let i = { children: [], btArr: [], nodeIndex: "N-root", uniformNodeId: "N-root" };
-    let s = {};
+    let i: any = { children: [], btArr: [], nodeIndex: "N-root", uniformNodeId: "N-root" };
+    let s: any = {};
     for (r in l) s[r] = l[r];
     ((s.length = l.length * (1 - e)), (s.parent = i), i.children.push(s));
-    let h = (function e(t) {
-      let n = { children: [] };
+    let h = (function e(t: any): any {
+      let n: any = { children: [] };
       return (
-        t.parent.children.forEach((e) => {
+        t.parent.children.forEach((e: any) => {
           e != t && n.children.push(e);
         }),
         (n.length = t.length),
