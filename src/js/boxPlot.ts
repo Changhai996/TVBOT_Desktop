@@ -1,41 +1,48 @@
-// @ts-nocheck
+type BoxPlotSummary = {
+    min: unknown;
+    q1: unknown;
+    m: unknown;
+    q3: unknown;
+    max: unknown;
+    name: string;
+    pointArr: unknown[];
+};
 
-class BoxPlot  {
-    constructor(mainPlot) {
+class BoxPlot {
+    mainPlot: unknown;
 
-        this.mainPlot = mainPlot
-
+    constructor(mainPlot: unknown) {
+        this.mainPlot = mainPlot;
     }
 
-    dataTransform(data, featureArr){
-        let final_data_arr =  []
-        featureArr.forEach(key=>{
-            let range = data.map(ele=>ele[key]).sort()
+    dataTransform(data: Record<string, unknown>[], featureArr: string[]): BoxPlotSummary[] {
+        const final_data_arr: BoxPlotSummary[] = [];
+        featureArr.forEach((key) => {
+            const range = data.map((ele) => ele[key]).sort() as unknown[];
 
-            let R_arr = [0, 0.25, 0.5, 0.75, 1]
-            let dict = {}
-            let [min, q1, m, q3, max] = R_arr.map(v=>d3.quantile(range, v))
+            const R_arr = [0, 0.25, 0.5, 0.75, 1];
+            const dict: BoxPlotSummary = {
+                min: null,
+                q1: null,
+                m: null,
+                q3: null,
+                max: null,
+                name: key,
+                pointArr: range
+            };
+            const [min, q1, m, q3, max] = R_arr.map((v) => d3.quantile(range, v));
 
-            dict.min = min
-            dict.q1 = q1
-            dict.m = m
-            dict.q3 = q3
-            dict.max = max
-            dict.name = key
+            dict.min = min;
+            dict.q1 = q1;
+            dict.m = m;
+            dict.q3 = q3;
+            dict.max = max;
 
-            dict.pointArr = range
+            final_data_arr.push(dict);
+        });
 
-
-            final_data_arr.push(dict)
-
-
-
-
-        })
-
-        return final_data_arr
+        return final_data_arr;
     }
-
 }
 
-export {BoxPlot}
+export { BoxPlot };
