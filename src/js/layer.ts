@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 let layer_component_T = `<div id="data-layer-container">
         <div id="layer-container-header" class="xiaochi-background">
             <div id="hide-layer-container-btn" :class="{'cuIcon-unfold': isDataLayerContainerShow,'cuIcon-fold':!isDataLayerContainerShow}"  @click="hideLayerContainer"></div>
@@ -104,12 +102,17 @@ let layer_component_T = `<div id="data-layer-container">
 
 
 class LayerComponent {
-    constructor(mainPlot, layerTypeList=[]) {
+    [key: string]: any;
+    mainPlot: any;
+    layerTypeList: any[];
+    handleLayerDataFunctionDict: Record<string, any>;
+
+    constructor(mainPlot: any, layerTypeList: any[] = []) {
         this.mainPlot = mainPlot
         this.layerTypeList = layerTypeList
         this.handleLayerDataFunctionDict = {}
     }
-    addLayerType(layerType, handleLayerDataFunction){
+    addLayerType(layerType: string, handleLayerDataFunction: any){
 
         this.layerTypeList.push(layerType)
         this.handleLayerDataFunctionDict[layerType] = handleLayerDataFunction
@@ -327,7 +330,7 @@ ${optionsStr}
                     console.log(motif_data_dict)
                     console.log(motif_length_dict)
 
-                    let d3_data = []
+                    let d3_data: any = []
 
                     for(let seq_id in motif_data_dict){
                         columns.forEach(col=>{
@@ -936,9 +939,9 @@ ${optionsStr}
                             mainPlot.updateControlData(layerStatistic.controlData, controlData)
 
                             layerStatistic.controlData = controlData
-                            if(otherData.updateFunction){
+                            if((otherData as any).updateFunction){
                                 //函数没有办法保存到json里面 这里要更新回来
-                                layerStatistic.otherData.updateFunction = otherData.updateFunction
+                                (layerStatistic.otherData as any).updateFunction = (otherData as any).updateFunction
                             }
 
                             this.layerStatistic[layerType].push(layerStatistic)
