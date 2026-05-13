@@ -1439,12 +1439,49 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             exportSvg.setAttribute('font-family', doc.__tvbot_embedFontFamily);
         }
 
-        applyPdfExportFixesToSvg(exportSvg, { labelParenthesisNbspCount: 2 });
+        const getExportPrepWorker = () => {
+            if (!window.__tvbot_export_prep_worker) {
+                window.__tvbot_export_prep_worker = new Worker(
+                    new URL('../core/export/exportPrep.worker.ts', import.meta.url),
+                    { type: 'module' }
+                );
+            }
+            if (!window.__tvbot_export_prep_seq) window.__tvbot_export_prep_seq = 0;
+            return window.__tvbot_export_prep_worker;
+        };
 
-        return doc.svg(exportSvg, { width: width, height: height }).then(() => {
-            doc.save(fileName + ".pdf");
-            return { data: { success: true } };
-        });
+        const runExportPrepInWorker = (svgString, pdfFixes) => {
+            const worker = getExportPrepWorker();
+            const requestId = `${Date.now()}-${++window.__tvbot_export_prep_seq}`;
+            return new Promise((resolve, reject) => {
+                const handler = (event) => {
+                    if (!event || !event.data || event.data.id !== requestId) return;
+                    worker.removeEventListener('message', handler);
+                    if (event.data.error) reject(new Error(event.data.error));
+                    else resolve(event.data.svgString || svgString);
+                };
+                worker.addEventListener('message', handler);
+                worker.postMessage({ id: requestId, svgString, pdfFixes });
+            });
+        };
+
+        let svgForPdf = exportSvg;
+        try {
+            const raw = new XMLSerializer().serializeToString(exportSvg);
+            const fixed = await runExportPrepInWorker(raw, { labelParenthesisNbspCount: 2 });
+            const parsed = new DOMParser().parseFromString(fixed, 'image/svg+xml');
+            svgForPdf = parsed.documentElement;
+            if (doc.__tvbot_embedFontFamily) {
+                svgForPdf.setAttribute('font-family', doc.__tvbot_embedFontFamily);
+            }
+        } catch (e) {
+            applyPdfExportFixesToSvg(exportSvg, { labelParenthesisNbspCount: 2 });
+            svgForPdf = exportSvg;
+        }
+
+        await doc.svg(svgForPdf, { width: width, height: height });
+        doc.save(fileName + ".pdf");
+        return { data: { success: true } };
     }
 
     async function exportToPNG(svgElement, fileName, transparent, widthOverride, heightOverride) {
