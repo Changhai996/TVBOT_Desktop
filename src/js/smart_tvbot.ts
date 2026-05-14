@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { applyPdfExportFixesToSvg } from "../core/export/pdfFixes.ts";
 import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.ts";
 
@@ -354,7 +352,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
         select.style.cursor = "pointer";
 
         select.onchange = (e) => {
-            const val = e.target.value;
+            const val = (e.target as HTMLSelectElement).value;
             // Sync to native Project Manager if it exists
             const app = getProjectManagerVueApp();
             if (app && app.projectList) {
@@ -439,7 +437,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
         else layoutSelect.value = 'normalTree';
 
         layoutSelect.onchange = async (e) => {
-            const targetType = e.target.value;
+            const targetType = (e.target as HTMLSelectElement).value;
             const app = window.normalTree || window.circleTree || window.unrootedTree;
             if (!app || typeof app.exportOriginalJsonData !== 'function' || typeof app.onLoadNewFile !== 'function') {
                 alert('Tree is not ready yet.');
@@ -464,9 +462,10 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
                 }
 
                 const pmApp = getProjectManagerVueApp();
+                const globalProjectSelect = document.getElementById('global-project-select') as HTMLSelectElement | null;
                 const projectId = pmApp && pmApp.projectList && pmApp.currentProjectIndex !== undefined
                     ? (pmApp.projectList[pmApp.currentProjectIndex] && pmApp.projectList[pmApp.currentProjectIndex].projectId)
-                    : (document.getElementById('global-project-select') ? document.getElementById('global-project-select').value : 'default');
+                    : (globalProjectSelect ? globalProjectSelect.value : 'default');
                 const treeTitle = pmApp && pmApp.treeTitle ? pmApp.treeTitle : 'tree';
 
                 const targetHtml = targetType === 'circleTree' ? 'circleTree.html' : (targetType === 'unrootedTree' ? 'unrootedTree.html' : 'normalTree.html');
@@ -723,7 +722,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
         }, true);
 
         const refreshTreeOpsState = () => {
-            const btn = document.getElementById('tvbot-tree-undo');
+            const btn = document.getElementById('tvbot-tree-undo') as HTMLButtonElement | null;
             if (!btn) return;
             const size = window.__tvbot_treeUndo && Array.isArray(window.__tvbot_treeUndo.stack) ? window.__tvbot_treeUndo.stack.length : 0;
             btn.disabled = size <= 0;
@@ -804,11 +803,11 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
     }
 
     function ensureManualAnnotLayer() {
-        const svg = document.querySelector('svg#svg');
+        const svg = document.querySelector('svg#svg') as SVGSVGElement | null;
         if (!svg) return null;
-        let g = document.getElementById('tvbot-manual-annot-layer');
+        let g = document.getElementById('tvbot-manual-annot-layer') as unknown as SVGGElement | null;
         if (!g) {
-            g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g = document.createElementNS('http://www.w3.org/2000/svg', 'g') as SVGGElement;
             g.setAttribute('id', 'tvbot-manual-annot-layer');
             g.setAttribute('pointer-events', 'none');
             const target = getAnnotTarget(svg);
@@ -829,9 +828,9 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
 
     function setupManualAnnot() {
         const state = getManualAnnotState();
-        const svg = document.querySelector('svg#svg');
-        if (!svg || svg._tvbotAnnot) return;
-        svg._tvbotAnnot = true;
+        const svg = document.querySelector('svg#svg') as SVGSVGElement | null;
+        if (!svg || (svg as any)._tvbotAnnot) return;
+        (svg as any)._tvbotAnnot = true;
 
         const isAnnotEl = (el) => {
             return !!(el && el.getAttribute && el.getAttribute('data-tvbot-annot') === '1');
@@ -1114,23 +1113,23 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
         svg.addEventListener('pointercancel', pointerUp, true);
 
         const hookControls = () => {
-            const btn = document.getElementById('tvbot-annotate-toggle');
-            const tool = document.getElementById('tvbot-annotate-tool');
-            const color = document.getElementById('tvbot-annotate-color');
-            const w = document.getElementById('tvbot-annotate-width');
-            const f = document.getElementById('tvbot-annotate-font');
-            const italic = document.getElementById('tvbot-annotate-italic');
-            const del = document.getElementById('tvbot-annotate-delete');
-            const deselect = document.getElementById('tvbot-annotate-deselect');
-            const undo = document.getElementById('tvbot-annotate-undo');
-            const clear = document.getElementById('tvbot-annotate-clear');
-            const ex = document.getElementById('tvbot-annotate-export');
-            if (!btn || btn._tvbotHooked) return false;
-            btn._tvbotHooked = true;
+            const btn = document.getElementById('tvbot-annotate-toggle') as HTMLButtonElement | null;
+            const tool = document.getElementById('tvbot-annotate-tool') as HTMLSelectElement | null;
+            const color = document.getElementById('tvbot-annotate-color') as HTMLInputElement | null;
+            const w = document.getElementById('tvbot-annotate-width') as HTMLInputElement | null;
+            const f = document.getElementById('tvbot-annotate-font') as HTMLInputElement | null;
+            const italic = document.getElementById('tvbot-annotate-italic') as HTMLInputElement | null;
+            const del = document.getElementById('tvbot-annotate-delete') as HTMLButtonElement | null;
+            const deselect = document.getElementById('tvbot-annotate-deselect') as HTMLButtonElement | null;
+            const undo = document.getElementById('tvbot-annotate-undo') as HTMLButtonElement | null;
+            const clear = document.getElementById('tvbot-annotate-clear') as HTMLButtonElement | null;
+            const ex = document.getElementById('tvbot-annotate-export') as HTMLInputElement | null;
+            if (!btn || (btn as any)._tvbotHooked || !tool || !color || !w || !f || !undo || !clear || !ex) return false;
+            (btn as any)._tvbotHooked = true;
 
             const updateBtn = () => {
                 btn.className = state.enabled ? 'btn btn-sm btn-success' : 'btn btn-sm btn-outline-success';
-                svg.style.cursor = state.enabled ? 'crosshair' : '';
+                (svg as any).style.cursor = state.enabled ? 'crosshair' : '';
                 const layer = ensureManualAnnotLayer();
                 if (layer) layer.setAttribute('pointer-events', state.enabled ? 'visiblePainted' : 'none');
                 if (!state.enabled) {
@@ -1219,9 +1218,9 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
         };
 
         const updateAnnotControlUI = () => {
-            const italic = document.getElementById('tvbot-annotate-italic');
-            const del = document.getElementById('tvbot-annotate-delete');
-            const deselect = document.getElementById('tvbot-annotate-deselect');
+            const italic = document.getElementById('tvbot-annotate-italic') as HTMLInputElement | null;
+            const del = document.getElementById('tvbot-annotate-delete') as HTMLButtonElement | null;
+            const deselect = document.getElementById('tvbot-annotate-deselect') as HTMLButtonElement | null;
             const selectedCount = getSelection().length;
             if (del) del.disabled = selectedCount === 0;
             if (deselect) deselect.disabled = selectedCount === 0;
@@ -1277,7 +1276,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
                     }
 
                     let globalProjectId = null;
-                    const globalSelect = document.getElementById('global-project-select');
+                    const globalSelect = document.getElementById('global-project-select') as HTMLSelectElement | null;
                     if (globalSelect && globalSelect.value) globalProjectId = globalSelect.value;
 
                     const payloadProjectId = postData.projectId || postData.projectID || postData.project || null;
@@ -1314,7 +1313,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
     async function handleLocalExport(format, svgString, plotType) {
         console.log("Intercepted export request for format:", format);
         
-        const svgElement = document.querySelector('svg#svg');
+        const svgElement = document.querySelector('svg#svg') as SVGSVGElement | null;
         if (!svgElement) {
             alert("Error: SVG element not found.");
             return Promise.reject("SVG not found");
@@ -1328,10 +1327,10 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
         }
 
         const state = getManualAnnotState();
-        const layer = document.querySelector('#tvbot-manual-annot-layer');
-        const prevDisplay = layer ? layer.style.display : '';
+        const layer = document.querySelector('#tvbot-manual-annot-layer') as unknown as SVGGraphicsElement | null;
+        const prevDisplay = layer ? (layer as any).style.display : '';
         const shouldHide = layer && state && state.includeInExport === false;
-        if (shouldHide) layer.style.display = 'none';
+        if (shouldHide) (layer as any).style.display = 'none';
         try {
             if (format === 'pdf') {
                 return await exportToPDF(svgElement, fileName);
@@ -1346,11 +1345,11 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             alert("Failed to export: " + err.message);
             return Promise.reject(err);
         } finally {
-            if (shouldHide) layer.style.display = prevDisplay;
+            if (shouldHide) (layer as any).style.display = prevDisplay;
         }
     }
 
-    async function exportToPDF(svgElement, fileName, widthOverride, heightOverride) {
+    async function exportToPDF(svgElement, fileName, widthOverride = undefined, heightOverride = undefined) {
         await ensurePdfLibraries();
         const { jsPDF } = window.jspdf;
 
@@ -1450,10 +1449,10 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             return window.__tvbot_export_prep_worker;
         };
 
-        const runExportPrepInWorker = (svgString, pdfFixes) => {
+        const runExportPrepInWorker = (svgString: string, pdfFixes: any): Promise<string> => {
             const worker = getExportPrepWorker();
             const requestId = `${Date.now()}-${++window.__tvbot_export_prep_seq}`;
-            return new Promise((resolve, reject) => {
+            return new Promise<string>((resolve, reject) => {
                 const handler = (event) => {
                     if (!event || !event.data || event.data.id !== requestId) return;
                     worker.removeEventListener('message', handler);
@@ -1465,12 +1464,12 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             });
         };
 
-        let svgForPdf = exportSvg;
+        let svgForPdf: SVGSVGElement = exportSvg;
         try {
             const raw = new XMLSerializer().serializeToString(exportSvg);
             const fixed = await runExportPrepInWorker(raw, { labelParenthesisNbspCount: 2 });
             const parsed = new DOMParser().parseFromString(fixed, 'image/svg+xml');
-            svgForPdf = parsed.documentElement;
+            svgForPdf = parsed.documentElement as unknown as SVGSVGElement;
             if (doc.__tvbot_embedFontFamily) {
                 svgForPdf.setAttribute('font-family', doc.__tvbot_embedFontFamily);
             }
@@ -1484,7 +1483,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
         return { data: { success: true } };
     }
 
-    async function exportToPNG(svgElement, fileName, transparent, widthOverride, heightOverride) {
+    async function exportToPNG(svgElement, fileName, transparent, widthOverride = undefined, heightOverride = undefined) {
         return new Promise((resolve, reject) => {
             const waitFonts = (document.fonts && document.fonts.ready) ? document.fonts.ready.catch(() => {}) : Promise.resolve();
             const bbox = svgElement.getBBox();
@@ -1533,18 +1532,18 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
         if (!window.__tvbot_script_promises) window.__tvbot_script_promises = {};
         const cache = window.__tvbot_script_promises;
         if (cache[src]) return cache[src];
-        cache[src] = new Promise((resolve, reject) => {
-            const existing = document.querySelector(`script[src="${src}"]`);
+        cache[src] = new Promise<void>((resolve, reject) => {
+            const existing = document.querySelector(`script[src="${src}"]`) as HTMLScriptElement | null;
             if (existing && existing.getAttribute('data-tvbot-loaded') === '1') {
-                resolve();
+                resolve(undefined);
                 return;
             }
-            const script = existing || document.createElement('script');
+            const script = (existing || document.createElement('script')) as HTMLScriptElement;
             script.src = src;
             script.async = true;
             script.onload = () => {
                 script.setAttribute('data-tvbot-loaded', '1');
-                resolve();
+                resolve(undefined);
             };
             script.onerror = () => reject(new Error('Failed to load: ' + src));
             if (!existing) document.head.appendChild(script);
@@ -1555,11 +1554,12 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
     function getProjectManagerVueApp() {
         const pmEl = document.getElementById('project-manager-app') || document.getElementById('project-manager-box');
         if (!pmEl) return null;
-        if (pmEl.__vue_app__) {
-            const proxy = pmEl.__vue_app__._instance.proxy;
+        const pmAny = pmEl as any;
+        if (pmAny.__vue_app__) {
+            const proxy = pmAny.__vue_app__._instance.proxy;
             return (proxy.$refs && proxy.$refs.projectManager) ? proxy.$refs.projectManager : proxy;
         }
-        if (pmEl.__vue__) return pmEl.__vue__;
+        if (pmAny.__vue__) return pmAny.__vue__;
         return null;
     }
 
@@ -1628,11 +1628,12 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             const pmEl = document.getElementById('project-manager-app') || document.getElementById('project-manager-box');
             let pmApp = null;
             if (pmEl) {
-                if (pmEl.__vue_app__) {
-                    pmApp = pmEl.__vue_app__._instance.proxy.$refs ? pmEl.__vue_app__._instance.proxy.$refs.projectManager : pmEl.__vue_app__._instance.proxy;
-                    if (!pmApp) pmApp = pmEl.__vue_app__._instance.proxy;
-                } else if (pmEl.__vue__) {
-                    pmApp = pmEl.__vue__;
+                const pmAny = pmEl as any;
+                if (pmAny.__vue_app__) {
+                    pmApp = pmAny.__vue_app__._instance.proxy.$refs ? pmAny.__vue_app__._instance.proxy.$refs.projectManager : pmAny.__vue_app__._instance.proxy;
+                    if (!pmApp) pmApp = pmAny.__vue_app__._instance.proxy;
+                } else if (pmAny.__vue__) {
+                    pmApp = pmAny.__vue__;
                 }
             }
             if (pmApp && pmApp.projectList && pmApp.currentProjectIndex !== undefined) {
@@ -1678,9 +1679,9 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
 
         const ensureDeleteListHook = (state) => {
             if (!app.styleData) return;
-            const list = app.styleData.deleteWholeCladeList;
+            const list: any = app.styleData.deleteWholeCladeList;
             if (!Array.isArray(list)) return;
-            if (list.__tvbot_delete_list_hooked) return;
+            if ((list as any).__tvbot_delete_list_hooked) return;
 
             const wrap = (name, shouldCapture) => {
                 const orig = list[name];
@@ -1817,7 +1818,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
                 const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
                 if (!cmdOrCtrl || e.shiftKey || e.altKey) return;
                 if (String(e.key || '').toLowerCase() !== 'z') return;
-                const t = e.target;
+                const t = e.target as any;
                 const tag = t && t.tagName ? String(t.tagName).toLowerCase() : '';
                 if (tag === 'input' || tag === 'textarea' || (t && t.isContentEditable)) return;
                 if (window.__tvbot_treeUndo && typeof window.__tvbot_treeUndo.undo === 'function') {
@@ -1884,12 +1885,15 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
     window.__tvbot_exportPrunedLeafIds = exportPrunedLeafIds;
 
     function ensureSoftDeleteOverlay() {
-        const svg = document.querySelector('svg#svg');
+        const svg = document.querySelector('svg#svg') as SVGSVGElement | null;
         if (!svg) return null;
-        const target = document.getElementById('maingroup') || svg.querySelector('g') || svg;
-        let g = document.getElementById('tvbot-soft-delete-layer');
+        const target =
+            (document.getElementById('maingroup') as unknown as SVGGElement | null) ||
+            (svg.querySelector('g') as SVGGElement | null) ||
+            svg;
+        let g = document.getElementById('tvbot-soft-delete-layer') as unknown as SVGGElement | null;
         if (!g) {
-            g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g = document.createElementNS('http://www.w3.org/2000/svg', 'g') as SVGGElement;
             g.setAttribute('id', 'tvbot-soft-delete-layer');
             g.setAttribute('pointer-events', 'none');
             target.appendChild(g);
@@ -1898,7 +1902,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
     }
 
     function applySoftDeleteMarks(app) {
-        const svg = document.querySelector('svg#svg');
+        const svg = document.querySelector('svg#svg') as SVGSVGElement | null;
         if (!svg || !app || !app.styleData) return;
         const deletedArr = Array.isArray(app.styleData.tvbotSoftDeletedLeafIds) ? app.styleData.tvbotSoftDeletedLeafIds : [];
         const deleted = new Set(deletedArr.map(s => String(s || '').trim()).filter(Boolean));
@@ -1915,7 +1919,10 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             const p = pt.matrixTransform(ctm.inverse());
             return { x: p.x, y: p.y };
         };
-        const targetG = overlay.parentNode && overlay.parentNode.getScreenCTM ? overlay.parentNode : (document.getElementById('maingroup') || svg);
+        const targetG =
+            (overlay.parentNode && (overlay.parentNode as any).getScreenCTM)
+                ? (overlay.parentNode as any as SVGGraphicsElement)
+                : ((document.getElementById('maingroup') as any) || svg);
 
         const texts = Array.from(svg.querySelectorAll('text'));
         texts.forEach(t => {
@@ -2042,9 +2049,9 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
         };
 
         const hookHardDeleteList = () => {
-            const list = app.styleData && app.styleData.deleteWholeCladeList;
+            const list: any = app.styleData && app.styleData.deleteWholeCladeList;
             if (!Array.isArray(list)) return;
-            if (list.__tvbot_soft_hooked) return;
+            if ((list as any).__tvbot_soft_hooked) return;
             
             // Initialize hard undo stack if missing
             if (!app.styleData.tvbotHardUndo) app.styleData.tvbotHardUndo = [];
@@ -2115,12 +2122,12 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
     }
 
     function ensureNodeStyleOverlay() {
-        const svg = document.querySelector('svg#svg');
+        const svg = document.querySelector('svg#svg') as SVGSVGElement | null;
         if (!svg) return null;
-        const target = document.getElementById('maingroup') || svg;
-        let g = document.getElementById('tvbot-node-style-layer');
+        const target = (document.getElementById('maingroup') as unknown as SVGGElement | null) || svg;
+        let g = document.getElementById('tvbot-node-style-layer') as unknown as SVGGElement | null;
         if (!g) {
-            g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g = document.createElementNS('http://www.w3.org/2000/svg', 'g') as SVGGElement;
             g.setAttribute('id', 'tvbot-node-style-layer');
             g.setAttribute('pointer-events', 'none');
             target.appendChild(g);
@@ -2175,7 +2182,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
 
     function resetStyledBranches(root) {
         if (!root) return;
-        const styled = Array.from(root.querySelectorAll('[data-tvbot-branch-styled="1"]'));
+        const styled = Array.from(root.querySelectorAll('[data-tvbot-branch-styled="1"]')) as any[];
         styled.forEach(el => {
             if (!el || !el.setAttribute) return;
             const origStroke = el.getAttribute('data-tvbot-orig-stroke');
@@ -2262,7 +2269,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             const hit = hits.find(el => isBranchSvgElement(el) && root.contains(el));
             if (hit) return hit;
         }
-        const candidates = Array.from(root.querySelectorAll('path,line,polyline,polygon')).filter(isBranchSvgElement);
+        const candidates = Array.from((root as any).querySelectorAll('path,line,polyline,polygon')).filter(isBranchSvgElement) as any[];
         let best = null;
         let bestDist = Number.POSITIVE_INFINITY;
         candidates.forEach(el => {
@@ -2312,7 +2319,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
         const h = app && app.treeHierarchy;
         if (!root || !h || typeof h.descendants !== 'function') return new Map();
         const nodes = (h.descendants() || []).filter(node => node && node.parent);
-        const candidates = Array.from(root.querySelectorAll('path,line,polyline,polygon')).filter(isBranchSvgElement);
+        const candidates = Array.from((root as any).querySelectorAll('path,line,polyline,polygon')).filter(isBranchSvgElement) as any[];
         if (!nodes.length || !candidates.length) return new Map();
 
         const nodeToEl = new Map();
@@ -2444,9 +2451,9 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
     }
 
     function getNodeClientPoint(node) {
-        const svg = document.querySelector('svg#svg');
+        const svg = document.querySelector('svg#svg') as SVGSVGElement | null;
         if (!svg || !node) return null;
-        const target = document.getElementById('maingroup') || svg;
+        const target = (document.getElementById('maingroup') as any) || svg;
         const x = Number(node.y);
         const y = Number(node.x);
         if (!Number.isFinite(x) || !Number.isFinite(y) || !svg.createSVGPoint) return null;
@@ -2621,8 +2628,8 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             });
         });
 
-        const texts = Array.from(treeRoot.querySelectorAll('text'));
-        texts.forEach(t => {
+        const texts = Array.from((treeRoot as any).querySelectorAll('text')) as any[];
+        texts.forEach((t: any) => {
             if (t.getAttribute('data-tvbot-leaf-styled') === '1') {
                 t.removeAttribute('data-tvbot-leaf-styled');
                 t.style.removeProperty('fill');
@@ -2777,7 +2784,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             return result;
         };
 
-        const styleCurrentBranchSubtree = (opts = {}) => {
+        const styleCurrentBranchSubtree = (opts: any = {}) => {
             const rootNode = getCurrentBranchRootNode();
             if (!rootNode || !rootNode.parent) return false;
             
@@ -2800,7 +2807,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             uniqueNodes.forEach((node, idx) => {
                 const nodeIndex = String(node.data && node.data.nodeIndex != null ? node.data.nodeIndex : '');
                 if (!nodeIndex) return;
-                const current = app.styleData.tvbotBranchStyles.find(x => x && String(x.nodeIndex) === nodeIndex) || {};
+                const current: any = app.styleData.tvbotBranchStyles.find(x => x && String(x.nodeIndex) === nodeIndex) || {};
                 const probe = getBranchProbeClientPoint(node);
                 const matchedEl = branchElMap.get(nodeIndex);
                 const item = {
@@ -2856,7 +2863,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             return true;
         };
 
-        const styleCurrentBranch = (opts = {}) => {
+        const styleCurrentBranch = (opts: any = {}) => {
             return styleCurrentBranchSubtree(opts);
         };
 
@@ -2891,14 +2898,14 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             return true;
         };
 
-        const styleCurrentLeaf = (opts = {}) => {
+        const styleCurrentLeaf = (opts: any = {}) => {
             const info = getCurrentNodeInfo();
             if (!info || (!info.isLeaf && !info.hasParent)) return false;
 
             const applyLeafStyle = (leafNode) => {
                 const lId = String(pickTreeNodeLabel(leafNode) || '').trim();
                 if (!lId) return;
-                const current = app.styleData.tvbotLeafStyles.find(x => x && String(x.leafId) === lId) || {};
+                const current: any = app.styleData.tvbotLeafStyles.find(x => x && String(x.leafId) === lId) || {};
                 const item = {
                     leafId: lId,
                     nodeIndex: String(leafNode.data && leafNode.data.nodeIndex != null ? leafNode.data.nodeIndex : ''),
@@ -2947,7 +2954,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             return true;
         };
 
-        const styleCurrentFoldedTriangle = (opts = {}) => {
+        const styleCurrentFoldedTriangle = (opts: any = {}) => {
             const info = getCurrentNodeInfo();
             if (!info || !info.nodeIndex) return false;
             if (!app.figureData) return false;
@@ -2971,7 +2978,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             return true;
         };
 
-        const styleCurrentFoldedTriangleStroke = (opts = {}) => {
+        const styleCurrentFoldedTriangleStroke = (opts: any = {}) => {
             const info = getCurrentNodeInfo();
             if (!info || !info.nodeIndex) return false;
             if (!app.figureData) return false;
@@ -3011,23 +3018,23 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             apply: () => applyNodeStyleMarks(app)
         };
 
-        const svg = document.querySelector('svg#svg');
-        if (svg && !svg.__tvbot_context_capture_ready) {
+        const svg = document.querySelector('svg#svg') as SVGSVGElement | null;
+        if (svg && !(svg as any).__tvbot_context_capture_ready) {
             svg.addEventListener('contextmenu', (evt) => {
                 captureCurrentContextTarget(app, evt);
             }, true);
-            svg.__tvbot_context_capture_ready = true;
+            (svg as any).__tvbot_context_capture_ready = true;
         }
 
-        if (svg && !svg.__tvbot_branch_click_style_ready) {
-            svg.addEventListener('click', (evt) => {
+        if (svg && !(svg as any).__tvbot_branch_click_style_ready) {
+            svg.addEventListener('click', (evt: MouseEvent) => {
                 if (!evt || evt.button !== 0) return;
                 if (isManagedOverlayElement(evt.target)) return;
                 setTimeout(() => {
                     syncSelectedNodeFromEvent(app, evt);
                 }, 60);
             }, true);
-            svg.__tvbot_branch_click_style_ready = true;
+            (svg as any).__tvbot_branch_click_style_ready = true;
         }
 
         setInterval(() => {
@@ -3037,8 +3044,9 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
 
     function hideTreeContextMenu() {
         const root = document.getElementById('layout_phylotree_context_menu_app');
-        if (root && (root.__vue_app__ || root.__vue__)) {
-            const vm = root.__vue_app__ ? root.__vue_app__._instance.proxy : root.__vue__;
+        const rootAny = root as any;
+        if (rootAny && (rootAny.__vue_app__ || rootAny.__vue__)) {
+            const vm = rootAny.__vue_app__ ? rootAny.__vue_app__._instance.proxy : rootAny.__vue__;
             if (vm && typeof vm.isShowMenu !== 'undefined') {
                 vm.isShowMenu = false;
                 return;
@@ -3138,7 +3146,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
     }
 
     function autoAdjustContextMenuPosition() {
-        const menu = document.getElementById('tree-structure-change-btn-box');
+        const menu = document.getElementById('tree-structure-change-btn-box') as any;
         if (!menu || menu.__tvbot_pos_observer) return;
         
         const observer = new MutationObserver((mutations) => {
@@ -3346,7 +3354,8 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             const info = api.getCurrentNodeInfo ? api.getCurrentNodeInfo() : null;
             const canBranch = !!(info && info.hasParent);
             const canLeaf = !!(info && (info.isLeaf || info.hasParent));
-            const isFolded = !!(info && info.nodeIndex && app.styleData && app.styleData.collapseCladeList && app.styleData.collapseCladeList.some(c => String(c.nodeIndex) === String(info.nodeIndex)));
+            const currentApp = window.normalTree || window.circleTree || window.unrootedTree;
+            const isFolded = !!(info && info.nodeIndex && currentApp && currentApp.styleData && currentApp.styleData.collapseCladeList && currentApp.styleData.collapseCladeList.some(c => String(c.nodeIndex) === String(info.nodeIndex)));
             
             deleteCladeItem.style.display = canBranch ? '' : 'none';
             softDeleteLeafItem.style.display = canLeaf ? '' : 'none';
@@ -3498,7 +3507,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             let columns = [];
             try {
                 rows = (window.d3 && typeof window.d3.tsvParse === 'function') ? window.d3.tsvParse(tsv) : [];
-                columns = rows && rows.columns ? rows.columns : (rows[0] ? Object.keys(rows[0]) : []);
+                columns = rows && (rows as any).columns ? (rows as any).columns : (rows[0] ? Object.keys(rows[0]) : []);
             } catch (e) {
                 rows = [];
             }
@@ -3577,7 +3586,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
         vertical.style.overflowY = 'auto';
 
         // Check if we are in the "layer" tab, if so, don't show the tool panel right away
-        const isLayerTab = Array.from(document.querySelectorAll('.mynav-horizontal .cu-item')).some(el => el.innerText.trim().toLowerCase() === 'layer' && el.classList.contains('cur'));
+        const isLayerTab = Array.from(document.querySelectorAll('.mynav-horizontal .cu-item')).some(el => (el as HTMLElement).innerText.trim().toLowerCase() === 'layer' && el.classList.contains('cur'));
 
         const box = document.createElement('div');
         box.id = 'tvbot-native-tools';
@@ -3617,7 +3626,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
         else layoutSelect.value = 'normalTree';
 
         layoutSelect.onchange = async (e) => {
-            const targetType = e.target.value;
+            const targetType = (e.target as HTMLSelectElement).value;
             const app = window.normalTree || window.circleTree || window.unrootedTree;
             if (!app || typeof app.exportOriginalJsonData !== 'function') {
                 alert('Tree is not ready yet.');
@@ -4024,8 +4033,10 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
                 alert('Please left-click a node or branch first.');
                 return;
             }
-            const rect = e.target ? e.target.getBoundingClientRect() : { left: e.clientX, top: e.clientY };
-            showAcademicColorPicker(rect.left, rect.bottom + 5, (color) => {
+            const tEl = e.target as HTMLElement | null;
+            const rect = tEl && tEl.getBoundingClientRect ? tEl.getBoundingClientRect() : { left: e.clientX, top: e.clientY };
+            const bottom = (rect as any).bottom != null ? (rect as any).bottom : (rect as any).top;
+            showAcademicColorPicker(rect.left, bottom + 5, (color) => {
                 if (color) {
                     if (!api.styleCurrentBranch({ color })) {
                         alert('Please left-click a node or branch first.');
@@ -4065,8 +4076,10 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
                 alert('Please left-click a leaf or branch first.');
                 return;
             }
-            const rect = e.target ? e.target.getBoundingClientRect() : { left: e.clientX, top: e.clientY };
-            showAcademicColorPicker(rect.left, rect.bottom + 5, (color) => {
+            const tEl = e.target as HTMLElement | null;
+            const rect = tEl && tEl.getBoundingClientRect ? tEl.getBoundingClientRect() : { left: e.clientX, top: e.clientY };
+            const bottom = (rect as any).bottom != null ? (rect as any).bottom : (rect as any).top;
+            showAcademicColorPicker(rect.left, bottom + 5, (color) => {
                 if (color) {
                     api.styleCurrentLeaf({ color });
                 }
@@ -4096,13 +4109,16 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
             e.stopPropagation();
             const api = window.__tvbot_node_style_api;
             const info = api && api.getCurrentNodeInfo ? api.getCurrentNodeInfo() : null;
-            const isFolded = !!(info && info.nodeIndex && app.styleData && app.styleData.collapseCladeList && app.styleData.collapseCladeList.some(c => String(c.nodeIndex) === String(info.nodeIndex)));
+            const currentApp = window.normalTree || window.circleTree || window.unrootedTree;
+            const isFolded = !!(info && info.nodeIndex && currentApp && currentApp.styleData && currentApp.styleData.collapseCladeList && currentApp.styleData.collapseCladeList.some(c => String(c.nodeIndex) === String(info.nodeIndex)));
             if (!isFolded) {
                 alert('Please left-click a folded clade first.');
                 return;
             }
-            const rect = e.target ? e.target.getBoundingClientRect() : { left: e.clientX, top: e.clientY };
-            showAcademicColorPicker(rect.left, rect.bottom + 5, (color) => {
+            const tEl = e.target as HTMLElement | null;
+            const rect = tEl && tEl.getBoundingClientRect ? tEl.getBoundingClientRect() : { left: e.clientX, top: e.clientY };
+            const bottom = (rect as any).bottom != null ? (rect as any).bottom : (rect as any).top;
+            showAcademicColorPicker(rect.left, bottom + 5, (color) => {
                 if (color) {
                     api.styleCurrentFoldedTriangle({ color });
                 }
@@ -4227,8 +4243,8 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
         refreshCheckpoints().catch(() => {});
 
         const refreshTreeOpsState = () => {
-            const btn = document.getElementById('tvbot-tree-undo');
-            const redoBtn = document.getElementById('tvbot-tree-redo');
+            const btn = document.getElementById('tvbot-tree-undo') as HTMLButtonElement | null;
+            const redoBtn = document.getElementById('tvbot-tree-redo') as HTMLButtonElement | null;
             if (!btn) return;
             const size = window.__tvbot_treeUndo && Array.isArray(window.__tvbot_treeUndo.stack) ? window.__tvbot_treeUndo.stack.length : 0;
             btn.disabled = size <= 0;
@@ -4363,7 +4379,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
                     setupNodeStyling(appNow);
                     applySoftDeleteMarks(appNow);
                     applyNodeStyleMarks(appNow);
-                    injectContextMenuStyling(appNow);
+                    injectContextMenuStyling();
                     hideLoading();
                     return;
                 }
@@ -4416,7 +4432,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
         // 1. Fix the drag behavior
         const originalDrag = app.drag;
         if (originalDrag) {
-            app.drag = function(options = {}) {
+            app.drag = function(options: any = {}) {
                 const { enableX = true, enableY = true, updateElementArr } = options;
                 return d3.drag()
                     .on("start", function() { d3.select(this).raise().classed("stroke-orange", true); })
@@ -4469,7 +4485,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
         setupTreeUndo(app);
         setupSoftPrune(app);
         setupNodeStyling(app);
-        injectContextMenuStyling(app);
+        injectContextMenuStyling();
         app._patched = true;
     }
 
@@ -4537,7 +4553,8 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
                     renameBtn.style.whiteSpace = "nowrap";
                     renameBtn.onclick = async (e) => {
                         e.preventDefault();
-                        const app = el.__vue_app__ ? el.__vue_app__._instance.proxy : el.__vue__;
+                        const elAny = el as any;
+                        const app = elAny.__vue_app__ ? elAny.__vue_app__._instance.proxy : elAny.__vue__;
                         if (!app || !app.projectList || app.currentProjectIndex === undefined) return;
                         const project = app.projectList[app.currentProjectIndex];
                         const oldName = project && project.projectId ? project.projectId : '';
@@ -4572,7 +4589,8 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
                     delBtn.style.whiteSpace = "nowrap";
                     delBtn.onclick = async (e) => {
                         e.preventDefault();
-                        const app = el.__vue_app__ ? el.__vue_app__._instance.proxy : el.__vue__;
+                        const elAny = el as any;
+                        const app = elAny.__vue_app__ ? elAny.__vue_app__._instance.proxy : elAny.__vue__;
                         if (!app || !app.projectList || app.currentProjectIndex === undefined) return;
                         
                         const project = app.projectList[app.currentProjectIndex];
@@ -4602,11 +4620,14 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
                     btnContainer.appendChild(renameBtn);
                     btnContainer.appendChild(delBtn);
                     
-                    projectSelect.parentNode.style.display = "flex";
-                    projectSelect.parentNode.style.alignItems = "center";
-                    projectSelect.parentNode.style.flexWrap = "wrap";
-                    projectSelect.parentNode.style.gap = "6px";
-                    projectSelect.parentNode.appendChild(btnContainer);
+                    const parent = projectSelect.parentNode as HTMLElement | null;
+                    if (parent) {
+                        parent.style.display = "flex";
+                        parent.style.alignItems = "center";
+                        parent.style.flexWrap = "wrap";
+                        parent.style.gap = "6px";
+                        parent.appendChild(btnContainer);
+                    }
                 }
 
                 // 2. Try to sync current project and title
@@ -4675,7 +4696,7 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
                     setTimeout(() => {
                         const box = document.getElementById('tvbot-native-tools');
                         if (!box) return;
-                        const isLayerTab = Array.from(document.querySelectorAll('.mynav-horizontal .cu-item')).some(el => el.innerText.trim().toLowerCase() === 'layer' && el.classList.contains('cur'));
+                        const isLayerTab = Array.from(document.querySelectorAll('.mynav-horizontal .cu-item')).some(el => (el as HTMLElement).innerText.trim().toLowerCase() === 'layer' && el.classList.contains('cur'));
                         box.style.display = isLayerTab ? 'none' : 'block';
                     }, 50);
                 });
@@ -4708,12 +4729,12 @@ import { cloneSvgWithComputedStyles } from "../core/export/inlineComputedStyles.
                     input.type = 'file';
                     input.accept = '.json,.nwk,.tre,.nexus,.nex,.txt';
                     input.onchange = (e) => {
-                        const file = e.target.files[0];
+                        const file = (e.target as HTMLInputElement).files?.[0];
                         if (!file) return;
                         const reader = new FileReader();
                         reader.onload = (re) => {
                             try {
-                                app.onLoadNewFile(re.target.result, 'local', [file.name]);
+                                app.onLoadNewFile((re.target as FileReader).result, 'local', [file.name]);
                             } catch (err) {
                                 alert("Failed to import tree: " + err.message);
                             }

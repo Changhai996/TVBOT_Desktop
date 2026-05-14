@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { MainPlot } from "./mainplot.ts";
 import { TreeParser } from "../core/tree/parserFacade.ts";
 import { collectLeafIdsFromRawTree } from "../core/tree/leafIds.ts";
@@ -33,6 +31,7 @@ const project_manager_T = `<div id="project-manager-box" style="padding: 0.5em;m
 <span class="cuIcon-unfold" style="color:#66c2a5;font-weight: bold;" v-show="!isShow"></span>
 </div>`;
 class MainTree extends MainPlot {
+  [key: string]: any;
   constructor() {
     (super("treefile"),
       (this.styleData.legendBTDragData = { x: 40, y: 40 }),
@@ -840,7 +839,7 @@ class MainTree extends MainPlot {
               (r = Array.from(new Set(r))),
               console.log("99jjj", r),
               a && (a.categoryList = r));
-            let l = {};
+            let l: any = {};
             ((l.switch = o.color["Custom color"].switch),
               r.forEach((e) => {
                 e in o.color["Custom color"]
@@ -989,7 +988,7 @@ class MainTree extends MainPlot {
               (r = Array.from(new Set(r))),
               console.log("99jjj", r),
               a && (a.categoryList = r));
-            let l = {};
+            let l: any = {};
             ((l.switch = o.color["Custom color"].switch),
               r.forEach((e) => {
                 e in o.color["Custom color"]
@@ -1310,7 +1309,7 @@ class MainTree extends MainPlot {
               (r = Array.from(new Set(r))),
               console.log("99jjj", r),
               l && (l.categoryList = r));
-            let t = {};
+            let t: any = {};
             ((t.switch = o.color["Custom color"].switch),
               r.forEach((e) => {
                 e in o.color["Custom color"]
@@ -1444,8 +1443,8 @@ class MainTree extends MainPlot {
             }),
               (s = Array.from(new Set(s))),
               e && (e.categoryList = s));
-            let l = {},
-              o = {};
+            let l: any = {},
+              o: any = {};
             ((l.switch = r.symbol["Symbol color"].switch),
               s.forEach((e) => {
                 (e in r.symbol["Symbol color"]
@@ -1586,7 +1585,7 @@ class MainTree extends MainPlot {
           e = (t, e) => {
             let a = e ? e.layerDataColumnsIndex : this.currentChenkedColumns;
             ((r = a.map((e) => t.columns[e])), e && (e.categoryList = r));
-            let l = {};
+            let l: any = {};
             ((l.switch = o.pie["Custom color"].switch),
               r.forEach((e) => {
                 e in o.pie["Custom color"]
@@ -1702,7 +1701,7 @@ class MainTree extends MainPlot {
           e = (t, e) => {
             let a = e ? e.layerDataColumnsIndex : this.currentChenkedColumns;
             ((r = a.map((e) => t.columns[e])), e && (e.categoryList = r));
-            let l = {};
+            let l: any = {};
             ((l.switch = o.pie["Custom color"].switch),
               r.forEach((e) => {
                 e in o.pie["Custom color"]
@@ -1758,7 +1757,7 @@ class MainTree extends MainPlot {
                   },
                 },
               }),
-              (l.xAxis = c.getAxisControlData(a)),
+              (l.xAxis = (c.getAxisControlData as any)(a)),
               (l.background = {
                 Background: {
                   id: `background-rect-style-${a}`,
@@ -1901,7 +1900,7 @@ class MainTree extends MainPlot {
                 },
               },
             }),
-            (o.xAxis = c.getAxisControlData(a)),
+            (o.xAxis = (c.getAxisControlData as any)(a)),
             (o.background = {
               Background: {
                 id: `background-rect-style-${a}`,
@@ -2029,7 +2028,7 @@ class MainTree extends MainPlot {
               (r = Array.from(new Set(r))),
               console.log("99jjj", r),
               a && (a.categoryList = r));
-            let l = {};
+            let l: any = {};
             ((l.switch = o.bar["Custom color"].switch),
               r.forEach((e) => {
                 e in o.bar["Custom color"]
@@ -2080,7 +2079,7 @@ class MainTree extends MainPlot {
                   },
                 },
               }),
-              (l.xAxis = c.getAxisControlData(a)),
+              (l.xAxis = (c.getAxisControlData as any)(a)),
               (l.background = {
                 Background: {
                   id: `background-rect-style-${a}`,
@@ -2260,7 +2259,7 @@ class MainTree extends MainPlot {
                 },
               },
             }),
-            (o.xAxis = c.getAxisControlData(a)),
+            (o.xAxis = (c.getAxisControlData as any)(a)),
             (o.background = {
               Background: {
                 id: `background-rect-style-${a}`,
@@ -2426,7 +2425,7 @@ class MainTree extends MainPlot {
               (r = Array.from(new Set(r))),
               console.log("99jjj", r),
               a && (a.categoryList = r));
-            let l = {};
+            let l: any = {};
             ((l.switch = o.lollipop["Lollipop color"].switch),
               r.forEach((e) => {
                 e in o.lollipop["Lollipop color"]
@@ -2474,7 +2473,7 @@ class MainTree extends MainPlot {
                 },
               },
             },
-            xAxis: c.getAxisControlData(a),
+            xAxis: (c.getAxisControlData as any)(a),
             background: {
               Background: {
                 id: `background-rect-style-${a}`,
@@ -2557,7 +2556,7 @@ class MainTree extends MainPlot {
               : this.currentChenkedColumns.map((e) => t.columns[e])),
               console.log("99jjj", o),
               e && (e.categoryList = o));
-            let a = {};
+            let a: any = {};
             ((a.switch = l.bar["Custom color"].switch),
               o.forEach((e) => {
                 e in l.bar["Custom color"]
@@ -2603,7 +2602,7 @@ class MainTree extends MainPlot {
                     },
                   },
                 },
-                xAxis: c.getAxisControlData(t),
+                xAxis: (c.getAxisControlData as any)(t),
                 background: {
                   Background: {
                     id: `background-rect-style-${t}`,
@@ -2758,7 +2757,7 @@ class MainTree extends MainPlot {
                 },
               },
             },
-            xAxis: c.getAxisControlData(a),
+            xAxis: (c.getAxisControlData as any)(a),
             background: {
               Background: {
                 id: `background-rect-style-${a}`,
@@ -2902,7 +2901,7 @@ class MainTree extends MainPlot {
               (r = Array.from(new Set(r))),
               console.log("99jjj", r),
               a && (a.categoryList = r));
-            let l = {};
+            let l: any = {};
             ((l.switch = o.box["Custom color"].switch),
               r.forEach((e) => {
                 e in o.box["Custom color"]
@@ -2948,7 +2947,7 @@ class MainTree extends MainPlot {
                     },
                   },
                 },
-                xAxis: c.getAxisControlData(t),
+                xAxis: (c.getAxisControlData as any)(t),
                 cell: {
                   "Color bar": {
                     color: {
@@ -3096,7 +3095,7 @@ class MainTree extends MainPlot {
                 },
               },
             },
-            xAxis: c.getAxisControlData(a),
+            xAxis: (c.getAxisControlData as any)(a),
             background: {
               Background: {
                 id: `background-rect-style-${a}`,
@@ -3199,7 +3198,7 @@ class MainTree extends MainPlot {
           e = (t, e) => {
             let a = e ? e.layerDataColumnsIndex : this.currentChenkedColumns;
             ((r = a.map((e) => t.columns[e])), e && (e.categoryList = r));
-            let l = {};
+            let l: any = {};
             ((l.switch = o.cell["Custom color"].switch),
               r.forEach((e) => {
                 e in o.cell["Custom color"]
@@ -3245,7 +3244,7 @@ class MainTree extends MainPlot {
                     },
                   },
                 },
-                xAxis: c.getAxisControlData(t),
+                xAxis: (c.getAxisControlData as any)(t),
                 cell: {
                   "Cell style": {
                     id: `cell-circle-style-${t}`,
@@ -3351,7 +3350,7 @@ class MainTree extends MainPlot {
                 },
               },
             },
-            xAxis: c.getAxisControlData(a),
+            xAxis: (c.getAxisControlData as any)(a),
             background: {
               Background: {
                 id: `background-rect-style-${a}`,
@@ -3456,7 +3455,7 @@ class MainTree extends MainPlot {
           e = (t, e) => {
             let a = e ? e.layerDataColumnsIndex : this.currentChenkedColumns;
             ((r = a.map((e) => t.columns[e])), e && (e.categoryList = r));
-            let l = {};
+            let l: any = {};
             ((l.switch = o.bubble["Custom color"].switch),
               r.forEach((e) => {
                 e in o.bubble["Custom color"]
@@ -3502,7 +3501,7 @@ class MainTree extends MainPlot {
                 },
               },
             },
-            xAxis: c.getAxisControlData(a),
+            xAxis: (c.getAxisControlData as any)(a),
             text: {
               "Color set": {
                 color: {
@@ -3555,7 +3554,7 @@ class MainTree extends MainPlot {
           e = (t, e) => {
             let a = e ? e.layerDataColumnsIndex : this.currentChenkedColumns;
             ((r = a.map((e) => t.columns[e])), e && (e.categoryList = r));
-            let l = {};
+            let l: any = {};
             ((l.switch = o.text["Custom color"].switch),
               r.forEach((e) => {
                 e in o.text["Custom color"]
@@ -3580,7 +3579,7 @@ class MainTree extends MainPlot {
             otherData: l,
             legendDragData: s,
           } = e;
-          if (1 < !this.currentChenkedColumns.length) return null;
+          if (1 < this.currentChenkedColumns.length) return null;
           ((o = {
             canvas: {
               "Canvas scale": {
@@ -3602,7 +3601,7 @@ class MainTree extends MainPlot {
                 },
               },
             },
-            xAxis: c.getAxisControlData(a),
+            xAxis: (c.getAxisControlData as any)(a),
             text: {
               "Color set": {
                 color: {
@@ -3677,7 +3676,7 @@ class MainTree extends MainPlot {
               .filter((e) => null != e)),
               (r = Array.from(new Set(r))),
               a && (a.categoryList = r));
-            let l = {};
+            let l: any = {};
             ((l.switch = o.text["Custom color"].switch),
               r.forEach((e) => {
                 e in o.text["Custom color"]
@@ -3808,7 +3807,7 @@ class MainTree extends MainPlot {
               (i[e.source] && i[e.target]) || n.push(e[t.columns[0]]);
             }),
             0 < n.length &&
-              c.showYesOrNoMessageBox(
+              (c.showYesOrNoMessageBox as any)(
                 "Data contains invalid links!",
                 `
 <h6 style="text-align: center;color: red;" >Node IDs in the following links don't exist in the tree:</h6>
@@ -3882,7 +3881,7 @@ class MainTree extends MainPlot {
                   e
                 ),
               )),
-              (e = (t, a) => {
+              (e = (t, a = undefined) => {
                 ((r = t
                   .map((e) =>
                     a
@@ -3893,7 +3892,7 @@ class MainTree extends MainPlot {
                   (r = Array.from(new Set(r))),
                   console.log("99jjj", r),
                   a && (a.categoryList = r));
-                let l = {};
+                let l: any = {};
                 ((l.switch = o.link["Color categories"].switch),
                   r.forEach((e) => {
                     e in o.link["Color categories"]
@@ -4006,7 +4005,7 @@ class MainTree extends MainPlot {
               (r = Array.from(new Set(r))),
               console.log("99jjj", r),
               a && (a.categoryList = r));
-            let l = {};
+            let l: any = {};
             ((l.switch = o.period["Custom color"].switch),
               r.forEach((e) => {
                 e in o.period["Custom color"]
@@ -4054,7 +4053,7 @@ class MainTree extends MainPlot {
                 },
               },
             }),
-            (l.xAxis = c.getAxisControlData(a)),
+            (l.xAxis = (c.getAxisControlData as any)(a)),
             (l.background = {
               Background: {
                 id: `background-rect-style-${a}`,
@@ -4195,7 +4194,7 @@ class MainTree extends MainPlot {
             )));
           e = (e, t) => {
             ((o = e.columns.slice(2)), t && (t.categoryList = o));
-            let a = {};
+            let a: any = {};
             ((a.switch = l.motif["Custom color"].switch),
               o.forEach((e) => {
                 e in l.motif["Custom color"]
@@ -4241,7 +4240,7 @@ class MainTree extends MainPlot {
                   },
                 },
               }),
-              (a.xAxis = c.getAxisControlData(t)),
+              (a.xAxis = (c.getAxisControlData as any)(t)),
               (a.background = {
                 Background: {
                   id: `background-rect-style-${t}`,
@@ -4283,7 +4282,7 @@ class MainTree extends MainPlot {
       (this.handleClickMethods.resetRerootTree = () => {
         (console.log("resetRerootTree"),
           (this.styleData.rootNodeIndex = void 0),
-          this.reRootTree(
+          (this.reRootTree as any)(
             this.styleData.rootNodeIndex,
             this.styleData.rootOffsetRate,
           ));
@@ -4291,7 +4290,7 @@ class MainTree extends MainPlot {
       (this.handleClickMethods.resetReverseChildren = () => {
         (console.log("resetReverseChildren"),
           (this.styleData.reverseChildrenList = []),
-          this.reRootTree(
+          (this.reRootTree as any)(
             this.styleData.rootNodeIndex,
             this.styleData.rootOffsetRate,
           ));
@@ -4299,29 +4298,29 @@ class MainTree extends MainPlot {
       (this.handleClickMethods.resetDeleteClade = () => {
         (console.log("resetDeleteClade"),
           (this.styleData.deleteWholeCladeList = []),
-          this.reRootTree(
+          (this.reRootTree as any)(
             this.styleData.rootNodeIndex,
             this.styleData.rootOffsetRate,
           ));
       }),
       (this.handleClickMethods.viewNodesId = (e) => {
-        (this.copyText(
+        ((this.copyText as any)(
           this.root
             .leaves()
             .map((e) => e.data.name)
             .join("\n"),
         ),
-          this.showMessageBox());
+          (this.showMessageBox as any)());
       }),
       (this.handleClickMethods.viewInternalNodesId = (e) => {
-        (this.copyText(
+        ((this.copyText as any)(
           this.root
             .descendants()
             .filter((e) => e.children)
             .map((e) => e.data.uniformNodeId)
             .join("\n"),
         ),
-          this.showMessageBox());
+          (this.showMessageBox as any)());
       }),
       (this.layout_phylotree_context_menu_app = Vue.createApp({
         data() {
@@ -4382,7 +4381,7 @@ class MainTree extends MainPlot {
                       (e = c.styleData.collapseCladeList.findIndex(
                         (e) => null == e.nodeIndex,
                       )) && c.styleData.collapseCladeList.splice(e, 1),
-                    c.reRootTree(
+                    (c.reRootTree as any)(
                       c.styleData.currentNodeIndex,
                       this.offsetRate,
                     )),
@@ -4399,11 +4398,11 @@ class MainTree extends MainPlot {
                   nodeIndex: c.styleData.currentNodeIndex,
                 }),
               c.styleData.rootNodeIndex
-                ? c.reRootTree(
+                ? (c.reRootTree as any)(
                     c.styleData.rootNodeIndex,
                     c.styleData.rootOffsetRate,
                   )
-                : c.reRootTree());
+                : (c.reRootTree as any)());
           },
           collapseClade() {
             var e = c.styleData.collapseCladeList.findIndex(
@@ -4443,11 +4442,11 @@ class MainTree extends MainPlot {
                   c.dictToControlList(c.figureData)));
             }
             c.styleData.rootNodeIndex
-              ? c.reRootTree(
+              ? (c.reRootTree as any)(
                   c.styleData.rootNodeIndex,
                   c.styleData.rootOffsetRate,
                 )
-              : c.reRootTree();
+              : (c.reRootTree as any)();
           },
           deleteWholeClade() {
             (console.log("N0" == c.styleData.currentNodeIndex || "N-root" == c.styleData.currentNodeIndex),
@@ -4456,11 +4455,11 @@ class MainTree extends MainPlot {
                     nodeIndex: c.styleData.currentNodeIndex,
                   }),
                   c.styleData.rootNodeIndex
-                    ? c.reRootTree(
+                    ? (c.reRootTree as any)(
                         c.styleData.rootNodeIndex,
                         c.styleData.rootOffsetRate,
                       )
-                    : c.reRootTree())
+                    : (c.reRootTree as any)())
                 : c.showMessageBox(
                     "cuIcon-roundclose",
                     "Can not delete root!",
@@ -4472,8 +4471,8 @@ class MainTree extends MainPlot {
             c.treeHierarchy.descendants().forEach((e) => {
               if (!matched && e.data.nodeIndex == c.styleData.currentNodeIndex) {
                 matched = true;
-                c.copyText(e.data.uniformNodeId);
-                c.showMessageBox();
+                (c.copyText as any)(e.data.uniformNodeId);
+                (c.showMessageBox as any)();
               }
             });
           },
@@ -4483,10 +4482,8 @@ class MainTree extends MainPlot {
               if (!matched && e.data.nodeIndex == c.styleData.currentNodeIndex) {
                 matched = true;
                 const leafIds = collectLeafIdsFromRawTree(e.data);
-                c.copyText(
-                  leafIds.join("\n"),
-                );
-                c.showMessageBox();
+                (c.copyText as any)(leafIds.join("\n"));
+                (c.showMessageBox as any)();
               }
             });
           },
@@ -4607,7 +4604,7 @@ class MainTree extends MainPlot {
             },
             async getData() {
               await c.getUserFigureData("/tvbot/getTVBOTToken");
-              let { projectList: e, treeList: t } =
+              let { projectList: e, treeList: t }: any =
                 await c.getUserFigureData("/tvbot/getTreeList");
               (console.log(
                 "treeList",
@@ -4709,14 +4706,14 @@ class MainTree extends MainPlot {
           this.btDragData.push({ x: 0, y: 0 }));
       }),
       console.log("treeHierarchy", this.treeHierarchy),
-      (window.treeHierarchy = this.treeHierarchy));
+      ((window as any).treeHierarchy = this.treeHierarchy));
     let s = [];
     (Object.keys(colorbrewer).forEach((e) => {
       s.push({ name: e, colorSet: colorbrewer[e] });
     }),
       (this.appData.colorList = s),
       (this.appData.colorCount = 8),
-      this.init());
+      (this.init as any)());
   }
   reRootTree_backup2(t, e = 0.5) {
     (t
@@ -4758,10 +4755,11 @@ class MainTree extends MainPlot {
       }),
       (this.rootLength = this.treeHierarchy.data.length),
       console.log("treeHierarchy", this.treeHierarchy),
-      (window.treeHierarchy = this.treeHierarchy),
-      this.init());
+      ((window as any).treeHierarchy = this.treeHierarchy),
+      (this.init as any)());
   }
   reRootTree(e, l = 0.5, o) {
+    let r;
     if (!e || "N-1" != e) {
       if (
         (console.log("root_id", e, o),
@@ -4780,20 +4778,20 @@ class MainTree extends MainPlot {
               .sum((e) => e.length))),
         this.figureData.branches["Branches sorting"].switch.value)
       ) {
-        var l = this.figureData.branches["Branches sorting"]["sort-by"],
-          r = l.optionList[l.value],
-          l = this.figureData.branches["Branches sorting"]["sort-order"];
-        let a = l.optionList[l.value];
-        (console.log("树枝排序", a),
-          "number of leaves" == r
+        const sortByControl = this.figureData.branches["Branches sorting"]["sort-by"];
+        const sortBy = sortByControl.optionList[sortByControl.value];
+        const sortOrderControl = this.figureData.branches["Branches sorting"]["sort-order"];
+        const sortOrder = sortOrderControl.optionList[sortOrderControl.value];
+        (console.log("树枝排序", sortOrder),
+          "number of leaves" == sortBy
             ? this.treeHierarchy.sort((e, t) =>
-                "ascending" == a
+                "ascending" == sortOrder
                   ? e.leaves().length - t.leaves().length
                   : t.leaves().length - e.leaves().length,
               )
-            : "branch length" == r &&
+            : "branch length" == sortBy &&
               this.treeHierarchy.sort((e, t) =>
-                "ascending" == a
+                "ascending" == sortOrder
                   ? e.data.length - t.data.length
                   : t.data.length - e.data.length,
               ));
@@ -5120,8 +5118,8 @@ class MainTree extends MainPlot {
           }),
         (this.rootLength = this.treeHierarchy.data.length),
         console.log("treeHierarchy", this.treeHierarchy),
-        (window.treeHierarchy = this.treeHierarchy),
-        "originalJsonData" != o && this.init());
+        ((window as any).treeHierarchy = this.treeHierarchy),
+        "originalJsonData" != o && (this.init as any)());
     }
   }
   setBranchLength(e, t, a, l, o) {
@@ -6014,7 +6012,7 @@ class MainTree extends MainPlot {
             .filter((e) => a.has(e.data.name))
             .forEach((t) => {
               if (a.get(t.data.name)[l] != o) {
-                let e = [t];
+                let e: any = [t];
                 ((e.category = a.get(t.data.name)[l]),
                   r.push(e),
                   (o = a.get(t.data.name)[l]));
@@ -6045,7 +6043,7 @@ class MainTree extends MainPlot {
                 })(a.parent);
                 (console.log("commonAncestor", o),
                   console.log("category", l.category));
-                let e = [];
+                let e: any = [];
                 ((e.category = l.category),
                   s.push(e),
                   l.forEach((e) => {
