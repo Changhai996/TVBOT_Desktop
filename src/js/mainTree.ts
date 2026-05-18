@@ -329,6 +329,14 @@ class MainTree extends MainPlot {
               "bezierX",
               "bezierY",
             ],
+            redTree: [
+              "rectangular",
+              "rounded rectangular",
+              "linear",
+              "elliptical",
+              "bezierX",
+              "bezierY",
+            ],
             unrootedTree: ["linear", "bezierX", "bezierY"],
           }[this.plotType],
           value: 0,
@@ -562,6 +570,12 @@ class MainTree extends MainPlot {
       (this.figureData["folded clade"] = {
         "Clade style": {
           id: "folded-clade-path",
+          "unfold-all": {
+            type: "button",
+            value: "Unfold all clades",
+            iconClass: "cuIcon-move",
+            event: "unfoldAllClades",
+          },
           "shape-type": {
             type: "opt",
             optionList: ["isosceles (max length)", "triangle (min/max length)"],
@@ -4814,14 +4828,15 @@ class MainTree extends MainPlot {
               (e.data.isCollapse = !0),
               (e.data.lengthMMV = d3.extent(
                 (function t(e, a, l) {
+                  let numLen = Number.isFinite(Number(e.length)) ? Number(e.length) : 1;
                   return (
-                    (a += e.length),
-                    e.children
+                    (a += numLen),
+                    e.children && e.children.length > 0
                       ? e.children.forEach((e) => t(e, a, l))
                       : l.push(a),
                     l
                   );
-                })(e.data, -e.data.length, []),
+                })(e.data, -(Number.isFinite(Number(e.data.length)) ? Number(e.data.length) : 1), []),
               )));
           });
         }),
@@ -4915,10 +4930,16 @@ class MainTree extends MainPlot {
                   }
                   e.push("All (SH-aLRT / UFboot)");
                 }
-                this.figureData.branches.Bootstraps.from.value =
-                  this.btRangeDict[e[0]][0];
-                this.figureData.branches.Bootstraps.to.value =
-                  this.btRangeDict[e[0]][1];
+                const defaultRangeKey = e.find((key) => this.btRangeDict[key]);
+                if (defaultRangeKey) {
+                  this.figureData.branches.Bootstraps.from.value =
+                    this.btRangeDict[defaultRangeKey][0];
+                  this.figureData.branches.Bootstraps.to.value =
+                    this.btRangeDict[defaultRangeKey][1];
+                } else {
+                  this.figureData.branches.Bootstraps.from.value = 0;
+                  this.figureData.branches.Bootstraps.to.value = 0;
+                }
               })()
             : e.push("None"),
           "otherProperty_L" in n)
@@ -6489,10 +6510,14 @@ class MainTree extends MainPlot {
   }
 }
 function maxLength(e, t = !1) {
-  return (
-    (null != e.length && !isNaN(e.length)) || (e.length = 1),
-    e.length + (e.children ? d3.max(e.children, (e) => maxLength(e, t)) : 0)
-  );
+  if (!e) return 0;
+  const lengthValue = Number(e.length);
+  const nodeLength = Number.isFinite(lengthValue) ? lengthValue : 1;
+  e.length = nodeLength;
+  const childMax = e.children
+    ? d3.max(e.children, (child) => maxLength(child, t)) || 0
+    : 0;
+  return nodeLength + childMax;
 }
 function getNodeHeight(e) {
   return 1 + (e.children ? d3.max(e.children, (e) => getNodeHeight(e)) : 0);

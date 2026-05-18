@@ -570,6 +570,9 @@ class NormalTree extends MainTree {
               },
             ]) + "Z";
       })
+      .call((t) => {
+        this.renderAttr(t, e);
+      })
       .attr(
         "fill-opacity",
         (t) =>
@@ -597,9 +600,6 @@ class NormalTree extends MainTree {
             ? customStroke
             : e.stroke
           ).value;
-      })
-      .call((t) => {
-        this.renderAttr(t, e);
       })
       .on("mouseenter", function () {
         let t = d3.select(this);
@@ -1861,7 +1861,7 @@ class NormalTree extends MainTree {
   }
 }
 const normalTree = ((window as any).normalTree = new NormalTree());
-normalTree.setExampleData(["/static/Ali/data/NJ_tree.treefile"]);
+
 let queryParams = new URLSearchParams(window.location.search);
 if (queryParams.has("originalJsonDataUri")) {
   let t = queryParams.get("originalJsonDataUri");
@@ -1869,7 +1869,14 @@ if (queryParams.has("originalJsonDataUri")) {
     (normalTree.importOriginalJsonData(t),
       d3.select("#page-loading-box").remove());
   });
-} else
-  d3.text("/static/Ali/data/NJ_tree.treefile").then(function (t) {
-    ((normalTree as any).onLoadNewFile(t), d3.select("#page-loading-box").remove());
-  });
+} else {
+  d3.select("#page-loading-box").remove();
+  let svgDiv = document.getElementById("svg-div");
+  if (svgDiv) {
+      let hint = document.createElement("div");
+      hint.id = "import-hint-overlay";
+      hint.style.cssText = "position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #94a3b8; font-size: 1.5rem; pointer-events: none; user-select: none; z-index: 10;";
+      hint.innerHTML = '<i class="bi bi-file-earmark-arrow-up" style="font-size: 3rem; display: block; margin-bottom: 1rem; color: #3b82f6;"></i>Please import a tree file to get started.';
+      svgDiv.appendChild(hint);
+  }
+}

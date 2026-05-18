@@ -54,9 +54,33 @@ def ensure_node_deps_and_build():
         print("[Setup] Installing Node.js dependencies...")
         run([npm, "install"])
 
-    if not DIST_DIR.exists():
+    def newest_mtime(path: Path, exts=None):
+        if not path.exists():
+            return 0
+        if path.is_file():
+            return path.stat().st_mtime
+        newest = 0
+        for p in path.rglob("*"):
+            if not p.is_file():
+                continue
+            if exts is not None and p.suffix.lower() not in exts:
+                continue
+            newest = max(newest, p.stat().st_mtime)
+        return newest
+
+    src_newest = max(
+        newest_mtime(ROOT / "src" / "js", exts={".ts", ".js"}),
+        newest_mtime(ROOT / "src" / "css", exts={".css"}),
+        newest_mtime(ROOT / "src", exts={".html"}),
+    )
+    dist_newest = newest_mtime(DIST_DIR)
+    need_build = (not DIST_DIR.exists()) or (src_newest > dist_newest)
+
+    if need_build:
         print("[Build] Building frontend assets...")
         run([npm, "run", "build"])
+    else:
+        print("[Build] Frontend assets are up-to-date. (skip)")
 
 
 def start_server(py_exec):
@@ -70,9 +94,13 @@ def start_server(py_exec):
 def main():
     os.chdir(ROOT)
     ensure_python_version()
+    created = not VENV_DIR.exists()
     ensure_venv()
     py_exec = venv_python()
-    ensure_python_deps(py_exec)
+    if created:
+        ensure_python_deps(py_exec)
+    else:
+        print("[Setup] Python environment exists. (skip pip install)")
     ensure_node_deps_and_build()
     start_server(py_exec)
 

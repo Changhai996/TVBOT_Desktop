@@ -23,6 +23,7 @@ export default defineConfig({
       input: {
         tanglegramTree: resolve(__dirname, 'src/js/tanglegramTree.ts'),
         normalTree: resolve(__dirname, 'src/js/normalTree.ts'),
+        redTree: resolve(__dirname, 'src/js/redTree.ts'),
         circleTree: resolve(__dirname, 'src/js/circleTree.ts'),
         unrootedTree: resolve(__dirname, 'src/js/unrootedTree.ts'),
         smart_tvbot: resolve(__dirname, 'src/js/smart_tvbot.ts'),

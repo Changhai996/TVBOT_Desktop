@@ -29,7 +29,7 @@
         let projectData: Record<string, unknown> | null = null;
         
         // Try to get data from the app instance
-        const app = window.normalTree as unknown as { exportOriginalJsonData?: (includeStyle: boolean) => unknown } | undefined;
+        const app = (window.normalTree || window.circleTree || window.unrootedTree || window.redTree) as unknown as { exportOriginalJsonData?: (includeStyle: boolean) => unknown } | undefined;
         if (app && typeof app.exportOriginalJsonData === 'function') {
             const raw = app.exportOriginalJsonData(true);
             if (raw && typeof raw === 'object') projectData = raw as Record<string, unknown>;

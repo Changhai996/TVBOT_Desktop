@@ -1201,6 +1201,14 @@ class MainPlot {
             .call(f.zoom.transform, d3.zoomIdentity)
             .on("dblclick.zoom", null);
         },
+        unfoldAllClades: function () {
+          if (f.styleData && f.styleData.collapseCladeList) {
+            f.styleData.collapseCladeList = [];
+            if (typeof f.reRootTree === "function") {
+              f.reRootTree(f.styleData.rootNodeIndex, f.styleData.rootOffsetRate);
+            }
+          }
+        },
         openLocalTreeImport: function () {
           this.addFile();
         },
@@ -1938,6 +1946,9 @@ class MainPlot {
   }
   async importOriginalJsonData(i = null) {
     var e;
+    const compatiblePlotTypes = new Set([this.plotType]);
+    if (this.plotType == "redTree") compatiblePlotTypes.add("normalTree");
+    if (this.plotType == "normalTree") compatiblePlotTypes.add("redTree");
     if (
       (null == i &&
         ((e = await this.fileManager.openFile({
@@ -1948,7 +1959,7 @@ class MainPlot {
         })),
         (i = await this.creatD3Data(e[0]))),
       console.log(i),
-      i.plotType == this.plotType)
+      compatiblePlotTypes.has(i.plotType))
     ) {
       for (var l in ((this.styleData = {}), i.styleData))
         this.styleData[l] = i.styleData[l];

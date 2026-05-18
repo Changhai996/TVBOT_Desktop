@@ -27,15 +27,21 @@ class FileManager {
                 if(OpenFilePickerOptions.types){
                     input.accept = accept.join(",")
                 }
+                input.style.position = "fixed"
+                input.style.left = "-9999px"
+                input.style.top = "-9999px"
+                input.value = ""
                 input.addEventListener("change", e => {
                     //适配safari浏览器
                     let fileList = e.target ? e.target.files : e.path[0].files
-                    resolve(fileList)
-
+                    try {
+                        resolve(fileList ? Array.from(fileList) : [])
+                    } finally {
+                        input.remove()
+                    }
                 })
-
-
-                input.click()
+                document.body.appendChild(input)
+                setTimeout(() => input.click(), 0)
             })
         }
 
@@ -43,26 +49,27 @@ class FileManager {
             //检查有没有本地文件操作API
             if(window.showOpenFilePicker){
                 console.log("本地文件操作API正常")
-                let fileHandleList = await window.showOpenFilePicker(OpenFilePickerOptions);
-                let fileList = []
-
-
-                for(let i=0;i<fileHandleList.length;i++){
-                    let file =  await fileHandleList[i].getFile()
-                    fileList.push(file)
+                try {
+                    let fileHandleList = await window.showOpenFilePicker(OpenFilePickerOptions);
+                    let fileList = []
+                    for(let i=0;i<fileHandleList.length;i++){
+                        let file =  await fileHandleList[i].getFile()
+                        fileList.push(file)
+                    }
+                    return fileList
+                } catch (e) {
+                    return await oldOpen()
                 }
-
-                return fileList
 
             }
             else {
                 return await oldOpen()
             }
 
-
-
-
     }
+
+
+
     saveBlobToFile(content,fileName){
         let reader = new FileReader();
 

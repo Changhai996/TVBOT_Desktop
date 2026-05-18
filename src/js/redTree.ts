@@ -5,12 +5,13 @@ import {
 } from "./mainTree.ts";
 import { BarPlot } from "./barPlot.ts";
 import { splitPath } from "./splitPath.ts";
-class NormalTree extends MainTree {
+class RedTree extends MainTree {
   [key: string]: any;
   constructor() {
     (super(),
       (this.barPlot = new BarPlot(this)),
-      (this.plotType = "normalTree"),
+      (this.plotType = "redTree"),
+      (this.redBandValues = []),
       this.creatVueApp());
   }
   syncCanvasToViewport() {
@@ -44,7 +45,228 @@ class NormalTree extends MainTree {
       resizeData.showMarginBox.value = !1;
     }
   }
+  hasREDValues() {
+    return !!(
+      this.root &&
+      this.root.descendants &&
+      this.root
+        .descendants()
+        .some((node: any) => typeof node?.data?.RED === "number")
+    );
+  }
+  getREDColorScale() {
+    let rootRed = this.root?.data?.RED ?? 0;
+    let maxRed =
+      d3.max(this.root.descendants(), (node: any) =>
+        typeof node?.data?.RED === "number" ? node.data.RED : rootRed,
+      ) ?? 1;
+    maxRed = Math.max(maxRed, rootRed + 1e-6, 1);
+    return d3
+      .scaleSequential(d3.interpolateTurbo)
+      .domain([rootRed, maxRed]);
+  }
+  drawRootMarker() {
+    if (!this.root || !this.maingroup) return;
+    this.maingroup.selectAll(".red-root-marker-group").remove();
+    this.maingroup
+      .append("g")
+      .attr("class", "red-root-marker-group")
+      .attr(
+        "transform",
+        `translate(${(this.root.branchLength || 0) + 10},${this.root.x})`,
+      )
+      .append("path")
+      .attr("d", d3.symbol().type(d3.symbolTriangle).size(140)())
+      .attr("transform", "rotate(90)")
+      .attr("fill", "#ef4444")
+      .attr("stroke", "#991b1b")
+      .attr("stroke-width", 1.5);
+  }
+  drawREDLabels() {
+    if (!this.maingroup) return;
+    this.maingroup.selectAll(".red-value-group").remove();
+    if (!this.hasREDValues()) return;
+    let colorScale = this.getREDColorScale();
+    let formatRED = d3.format(".3f");
+    this.maingroup
+      .append("g")
+      .attr("class", "red-value-group")
+      .selectAll("g")
+      .data(
+        this.root
+          .descendants()
+          .filter((node: any) => typeof node?.data?.RED === "number")
+          .filter((node: any) => node === this.root || !!node.children)
+          .filter(
+            (node: any) =>
+              !(!node.children && Math.abs(Number(node.data.RED) - 1) < 1e-9),
+          ),
+      )
+      .join("g")
+      .attr("transform", (node: any) => `translate(${node.branchLength},${node.x})`)
+      .append("text")
+      .attr("dx", (node: any) => (node.children ? 8 : 6))
+      .attr("dy", (node: any) => (node.children ? -6 : -4))
+      .attr("font-size", (node: any) => (node === this.root ? "11px" : "10px"))
+      .attr("font-weight", (node: any) => (node === this.root ? 700 : 600))
+      .attr("fill", (node: any) => colorScale(node.data.RED))
+      .attr("pointer-events", "none")
+      .text((node: any) => formatRED(node.data.RED));
+  }
+  calculateRED(rootRed: number) {
+    if (!this.root || !this.root.descendants) {
+      this.showMessageBox("cuIcon-roundclose", "No tree loaded to calculate RED.", "error");
+      return;
+    }
+
+    // Auto-unfold all clades before calculating RED to ensure calculation reaches the true leaves
+    if (this.styleData && this.styleData.collapseCladeList && this.styleData.collapseCladeList.length > 0) {
+      this.styleData.collapseCladeList = [];
+      if (typeof (this as any).reRootTree === "function") {
+        (this as any).reRootTree(this.styleData.rootNodeIndex, this.styleData.rootOffsetRate);
+      }
+    }
+
+    let nodeStats = new Map();
+    // 1. Postorder traversal for average distance to leaves
+    // d3 hierarchy leaves/descendants are often structured, but let's do a strict postorder
+    let postorder = this.root.descendants().reverse();
+    for (let node of postorder) {
+      if (!node.children || node.children.length === 0) {
+        nodeStats.set(node, { n_tips: 1, sum_dist: 0.0 });
+      } else {
+        let total_tips = 0;
+        let total_dist = 0.0;
+        for (let child of node.children) {
+          let childInfo = nodeStats.get(child);
+          // In TVBOT's D3 structure, node.data.length is the branch length of that node
+          let edge = child.data.length || 0;
+          total_tips += childInfo.n_tips;
+          total_dist += childInfo.sum_dist + (edge * childInfo.n_tips);
+        }
+        nodeStats.set(node, { n_tips: total_tips, sum_dist: total_dist });
+      }
+    }
+
+    // 2. Preorder traversal for RED
+    let preorder = this.root.descendants();
+    for (let node of preorder) {
+      if (!node.parent) {
+        node.data.otherProperty_L = node.data.otherProperty_L || {};
+        node.data.otherProperty_L["RED"] = rootRed;
+        node.data.RED = rootRed;
+      } else {
+        let P = node.parent.data.RED;
+        let a = node.data.length || 0;
+        let stats = nodeStats.get(node);
+        let b = stats.n_tips > 0 ? stats.sum_dist / stats.n_tips : 0;
+        
+        let red = 0;
+        if (a + b === 0) {
+          red = 1.0;
+        } else {
+          red = P + (a / (a + b)) * (1 - P);
+        }
+        
+        node.data.otherProperty_L = node.data.otherProperty_L || {};
+        node.data.otherProperty_L["RED"] = red;
+        node.data.RED = red;
+      }
+    }
+
+    // Tell TVBOT to update UI
+    this.init();
+    this.showMessageBox(
+      "cuIcon-roundcheck",
+      "RED calculation completed. Root marker and RED labels have been updated.",
+      "success",
+    );
+  }
+  
+  useREDAsBranchLengths() {
+    if (!this.root || !this.root.data || this.root.data.RED === undefined) {
+      this.showMessageBox("cuIcon-roundclose", "Please calculate RED first!", "error");
+      return;
+    }
+    let preorder = this.root.descendants();
+    for (let node of preorder) {
+      if (node.parent) {
+        node.data.length = Math.max(0, node.data.RED - node.parent.data.RED);
+      } else {
+        node.data.length = 0;
+      }
+    }
+    this.init();
+  }
+
+  drawREDBands(bands: number[]) {
+    let svg = d3.select("#svg-div svg g#maingroup");
+    if (svg.empty()) return;
+    svg.selectAll(".red-band-group").remove();
+    if (!this.hasREDValues()) {
+      this.showMessageBox("cuIcon-roundclose", "Please calculate RED before drawing RED bands.", "error");
+      return;
+    }
+    let rootRed = this.root.data.RED || 0;
+    let upperRed =
+      d3.max(this.root.descendants(), (node: any) =>
+        typeof node?.data?.RED === "number" ? node.data.RED : rootRed,
+      ) ?? 1;
+    upperRed = Math.max(upperRed, 1);
+    let cleanedBands = Array.from(
+      new Set(
+        (bands || [])
+          .map((v) => Number(v))
+          .filter((v) => !isNaN(v) && v > rootRed && v < upperRed),
+      ),
+    ).sort((a, b) => a - b);
+    this.redBandValues = cleanedBands;
+    if (cleanedBands.length === 0) return;
+    let xScale = d3
+      .scaleLinear()
+      .domain([rootRed, upperRed])
+      .range([0, this.innerwidth]);
+    let colors = ["#f8fafc", "#e0f2fe", "#dbeafe", "#ede9fe", "#fee2e2"];
+    let boundaries = [rootRed, ...cleanedBands, upperRed];
+    let bandGroup = svg.insert("g", ":first-child").attr("class", "red-band-group");
+    for (let i = 0; i < boundaries.length - 1; i++) {
+      let start = boundaries[i];
+      let end = boundaries[i + 1];
+      let startX = xScale(start);
+      let endX = xScale(end);
+      bandGroup
+        .append("rect")
+        .attr("x", startX)
+        .attr("y", 0)
+        .attr("width", Math.max(0, endX - startX))
+        .attr("height", this.innerHeight)
+        .attr("fill", colors[i % colors.length])
+        .attr("opacity", 0.45);
+      if (i < boundaries.length - 2) {
+        bandGroup
+          .append("line")
+          .attr("x1", endX)
+          .attr("y1", 0)
+          .attr("x2", endX)
+          .attr("y2", this.innerHeight)
+          .attr("stroke", "#ef4444")
+          .attr("stroke-width", 2)
+          .attr("stroke-dasharray", "5,5");
+      }
+      bandGroup
+        .append("text")
+        .attr("x", (startX + endX) / 2)
+        .attr("y", -10)
+        .attr("fill", "#b91c1c")
+        .attr("font-size", "11px")
+        .attr("font-weight", 600)
+        .attr("text-anchor", "middle")
+        .text(`${start.toFixed(2)} - ${end.toFixed(2)}`);
+    }
+  }
+
   init(...args: any[]) {
+
     let [t, a, e] = args;
     if (
       (console.log("树枝排序", t, a, e),
@@ -129,7 +351,10 @@ class NormalTree extends MainTree {
       this.colorBranch(),
       this.drawRecombinationFragmentMap(),
       this.drawLegend(),
-      this.setGlobalFontStyle());
+      this.setGlobalFontStyle(),
+      this.drawRootMarker(),
+      this.drawREDLabels(),
+      this.redBandValues && this.redBandValues.length && this.drawREDBands(this.redBandValues));
   }
   drawTree() {
     const o = this;
@@ -372,6 +597,7 @@ class NormalTree extends MainTree {
   drawCollapseClade() {
     let t = this.root.leaves();
     var a = t.filter((t) => t.data.isCollapse);
+    console.log("[drawCollapseClade] collapsed leaves count:", a.length, a);
     let cladeStyle = this.figureData["folded clade"]["Clade style"];
     let widthScale = cladeStyle["width-scale"]
       ? cladeStyle["width-scale"].value
@@ -418,6 +644,9 @@ class NormalTree extends MainTree {
           ? `M${t.branchLength - e},${t.x}L${t.branchLength},${t.x - l}L${t.branchLength},${t.x + l}Z`
           : `M${t.branchLength},${t.x}L${t.branchLength + minL},${t.x - l}L${t.branchLength + maxL},${t.x + l}Z`;
       })
+      .call((t) => {
+        this.renderAttr(t, e);
+      })
       .attr(
         "fill-opacity",
         (t) =>
@@ -445,9 +674,6 @@ class NormalTree extends MainTree {
             ? customStroke
             : e.stroke
           ).value;
-      })
-      .call((t) => {
-        this.renderAttr(t, e);
       })
       .on("mouseenter", this.treeBranchEnterFunction("foldedClade"))
       .on("mouseleave", this.treeBranchleaveFunction("foldedClade"))
@@ -2073,211 +2299,186 @@ class NormalTree extends MainTree {
         s.selectAll(".tick .tick-line").remove());
   }
 }
-const normalTree = ((window as any).normalTree = new NormalTree());
+const redTree = ((window as any).redTree = new RedTree());
+
 let queryParams = new URLSearchParams(window.location.search);
-const originalOnLoadNewFile = normalTree.onLoadNewFile;
-normalTree.onLoadNewFile = function (...args: any[]) {
-  document.getElementById("import-hint-overlay")?.remove();
-  return originalOnLoadNewFile.apply(this, args);
-};
-
-function removeLoadingBox() {
+if (queryParams.has("originalJsonDataUri")) {
+  let t = queryParams.get("originalJsonDataUri");
+  d3.json(t)
+    .then((t) => {
+      redTree.importOriginalJsonData(t);
+      d3.select("#page-loading-box").remove();
+    })
+    .catch((err) => {
+      d3.select("#page-loading-box").remove();
+      redTree.showMessageBox(
+        "cuIcon-roundclose",
+        `Import failed: ${err?.message || String(err)}`,
+        "error",
+      );
+    });
+} else {
   d3.select("#page-loading-box").remove();
-}
-
-function showLoadingBox(message = "Loading...") {
-  const loadingBox = document.getElementById("page-loading-box");
-  const loadingText = loadingBox?.querySelector("span");
-  if (!loadingBox) return;
-  loadingBox.style.display = "flex";
-  if (loadingText) loadingText.textContent = message;
-}
-
-function showImportHint() {
   let svgDiv = document.getElementById("svg-div");
-  if (!svgDiv || document.getElementById("import-hint-overlay")) return;
-  let hint = document.createElement("div");
-  hint.id = "import-hint-overlay";
-  hint.style.cssText =
-    "position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #94a3b8; font-size: 1.25rem; pointer-events: none; user-select: none; z-index: 10;";
-  hint.innerHTML =
-    '<i class="bi bi-file-earmark-arrow-up" style="font-size: 2.5rem; display: block; margin-bottom: 0.75rem; color: #3b82f6;"></i>请导入树文件';
-  svgDiv.appendChild(hint);
-}
-
-function showLoadError(message: string) {
-  removeLoadingBox();
-  showImportHint();
-  if ((normalTree as any).showMessageBox) {
-    (normalTree as any).showMessageBox(
-      "cuIcon-roundclose",
-      `Import failed: ${message}`,
-      "error",
-    );
+  if (svgDiv) {
+      let hint = document.createElement("div");
+      hint.id = "import-hint-overlay";
+      hint.style.cssText = "position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #94a3b8; font-size: 1.5rem; pointer-events: none; user-select: none; z-index: 10;";
+      hint.innerHTML = '<i class="bi bi-file-earmark-arrow-up" style="font-size: 3rem; display: block; margin-bottom: 1rem; color: #3b82f6;"></i>Please import a tree file to get started.';
+      svgDiv.appendChild(hint);
   }
 }
 
-let workspaceBrowserState = {
-  loading: false,
-  loaded: false,
-  treeList: [] as any[],
-  projectList: [] as any[],
-};
+// Workspace Import Logic for RED Tree
+let workspaceBrowserState = { loading: false, loaded: false, treeList: [] as any[], projectList: [] as any[] };
 
-function escapeHtml(value: string) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+function escapeHtml(unsafe: string) {
+    return (unsafe || "").replace(/[&<"'>]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m] as string));
 }
 
 function renderWorkspaceBrowser() {
-  const container = document.getElementById("workspaceAccordion");
-  if (!container) return;
-  const projects = workspaceBrowserState.projectList || [];
-  const trees = workspaceBrowserState.treeList || [];
-  if (projects.length === 0) {
-    container.innerHTML =
-      '<div class="p-3 text-muted text-center">No projects found in Workspace.</div>';
-    return;
-  }
-  container.innerHTML = projects
-    .map((project: any) => {
-      const projectId = String(project.projectId ?? project.id ?? project.name ?? "");
-      const projectName = escapeHtml(
-        String(project.projectName ?? project.name ?? projectId),
-      );
-      const projectTrees = trees.filter(
-        (item: any) => String(item.projectId) === projectId,
-      );
-      const treeButtons = projectTrees.length
-        ? projectTrees
-            .map((item: any) => {
-              const treeName = String(item.treeName ?? item.name ?? "");
-              return `<button type="button" class="btn btn-sm btn-outline-secondary w-100 text-start" data-project-id="${escapeHtml(
-                projectId,
-              )}" data-tree-name="${escapeHtml(treeName)}">${escapeHtml(treeName)}</button>`;
-            })
-            .join("")
-        : '<div class="text-muted small">No tree files in this project.</div>';
-      return `<details><summary>${projectName}</summary><div class="workspace-tree-list">${treeButtons}</div></details>`;
-    })
-    .join("");
+    const container = document.getElementById('workspaceAccordion');
+    if (!container) return;
+    const allTrees = workspaceBrowserState.treeList || [];
+    const projects = workspaceBrowserState.projectList || [];
+    
+    if (projects.length === 0) {
+        container.innerHTML = `<div class="p-3 text-muted text-center">No projects found in Workspace.</div>`;
+        return;
+    }
+    
+    const cards = projects.map(project => {
+        const projectName = project.projectId;
+        const projectLabel = project.projectName || projectName;
+        const trees = allTrees.filter(t => t.projectId === projectName && t.plotType !== 'tanglegramTree').sort((a, b) => (Number(b.mtime) || 0) - (Number(a.mtime) || 0));
+        
+        const bodyHtml = trees.length === 0 ? `<div class="p-2 text-muted small">No trees found</div>` : trees.map(tree => `
+            <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                data-project-id="${escapeHtml(projectName)}" data-tree-name="${escapeHtml(tree.treeName)}">
+                <div>
+                    <div class="fw-bold">${escapeHtml(tree.treeName)}</div>
+                    <div class="small text-muted">${escapeHtml(tree.time_str || '')}</div>
+                </div>
+                <span class="badge bg-primary rounded-pill">${escapeHtml((tree.plotType || 'normalTree').replace('Tree', ''))}</span>
+            </button>
+        `).join('');
+        
+        return `<details class="card mb-2">
+            <summary class="card-header fw-bold bg-light d-flex justify-content-between align-items-center" style="cursor: pointer;">
+                <span>${escapeHtml(projectLabel)}</span>
+                <span class="badge rounded-pill text-bg-light border">${trees.length}</span>
+            </summary>
+            <div class="list-group list-group-flush">${bodyHtml}</div>
+        </details>`;
+    });
+    container.innerHTML = cards.join('');
 }
 
 async function fetchWorkspaceTreeList(forceRefresh = false) {
-  if (workspaceBrowserState.loaded && !forceRefresh) {
+    if (workspaceBrowserState.loaded && !forceRefresh) { renderWorkspaceBrowser(); return; }
+    workspaceBrowserState.loading = true;
+    const container = document.getElementById('workspaceAccordion');
+    if (container) container.innerHTML = `<div class="p-3 text-center text-muted"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Loading workspace...</div>`;
+    try {
+        const res = await fetch('/tvbot/getTreeList');
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const data = await res.json();
+        workspaceBrowserState.treeList = Array.isArray(data.treeList) ? data.treeList : [];
+        workspaceBrowserState.projectList = Array.isArray(data.projectList) ? data.projectList : [];
+        workspaceBrowserState.loaded = true;
+    } catch (err: any) {
+        if (container) container.innerHTML = `<div class="p-3 text-danger text-center">Failed to load: ${escapeHtml(err.message)}</div>`;
+        workspaceBrowserState.loaded = false;
+        return;
+    } finally { workspaceBrowserState.loading = false; }
     renderWorkspaceBrowser();
-    return;
-  }
-  workspaceBrowserState.loading = true;
-  const container = document.getElementById("workspaceAccordion");
-  if (container) {
-    container.innerHTML =
-      '<div class="p-3 text-center text-muted"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Loading workspace...</div>';
-  }
-  try {
-    const res = await fetch("/tvbot/getTreeList");
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    workspaceBrowserState.treeList = Array.isArray(data.treeList)
-      ? data.treeList
-      : [];
-    workspaceBrowserState.projectList = Array.isArray(data.projectList)
-      ? data.projectList
-      : [];
-    workspaceBrowserState.loaded = true;
-  } catch (err: any) {
-    if (container) {
-      container.innerHTML = `<div class="p-3 text-danger text-center">Failed to load: ${escapeHtml(
-        err?.message || String(err),
-      )}</div>`;
-    }
-    workspaceBrowserState.loaded = false;
-    return;
-  } finally {
-    workspaceBrowserState.loading = false;
-  }
-  renderWorkspaceBrowser();
 }
 
-(window as any).openWorkspaceModal = function () {
-  const modalEl = document.getElementById("workspaceModal");
-  if (!modalEl || !(window as any).bootstrap?.Modal) return;
-  const modal = new (window as any).bootstrap.Modal(modalEl);
-  modal.show();
-  fetchWorkspaceTreeList(false);
+(window as any).openWorkspaceModal = function() {
+    const modalEl = document.getElementById('workspaceModal');
+    if (modalEl) {
+        const modal = new (window as any).bootstrap.Modal(modalEl);
+        modal.show();
+        fetchWorkspaceTreeList(false);
+    }
 };
 
-(window as any).selectWorkspaceTree = async function (dataObj: any) {
-  const { projectId, treeName } = dataObj || {};
-  const modalEl = document.getElementById("workspaceModal");
-  try {
-    const dataUrl = `/api/get_tree/${encodeURIComponent(projectId)}/${encodeURIComponent(treeName)}.json`;
-    if (modalEl) {
-      const modal = (window as any).bootstrap?.Modal.getInstance(modalEl);
-      if (modal) modal.hide();
-    }
-    const url = new URL(window.location.href);
-    url.searchParams.set("originalJsonDataUri", dataUrl);
-    url.searchParams.set("projectId", String(projectId));
-    url.searchParams.set("treeTitle", String(treeName));
+(window as any).selectWorkspaceTree = async function(dataObj: any) {
+    const { projectId, treeName } = dataObj;
+    const modalEl = document.getElementById('workspaceModal');
     try {
-      (window as any).__tvbot_skip_beforeunload = true;
-      sessionStorage.setItem("tvbot_skip_beforeunload_once", "1");
-    } catch (_err) {}
-    window.location.href = url.toString();
-  } catch (err: any) {
-    showLoadError(err?.message || String(err));
-  }
+        const dataUrl = `/api/get_tree/${encodeURIComponent(projectId)}/${encodeURIComponent(treeName)}.json`;
+        if (modalEl) {
+            const modal = (window as any).bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
+        const url = new URL(window.location.href);
+        url.searchParams.set("originalJsonDataUri", dataUrl);
+        url.searchParams.set("projectId", String(projectId));
+        url.searchParams.set("treeTitle", String(treeName));
+        try {
+            (window as any).__tvbot_skip_beforeunload = true;
+            sessionStorage.setItem("tvbot_skip_beforeunload_once", "1");
+        } catch (e) {}
+        window.location.href = url.toString();
+    } catch (err: any) {
+        alert('Failed to select workspace tree: ' + err.message);
+    }
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  const acc = document.getElementById("workspaceAccordion");
+  const acc = document.getElementById('workspaceAccordion');
   if (acc) {
-    acc.addEventListener("click", function (event) {
-      const target = event.target as Element | null;
-      const button = target
-        ? (target.closest(
-            "button[data-project-id][data-tree-name]",
-          ) as HTMLButtonElement | null)
-        : null;
-      if (!button) return;
-      (window as any).selectWorkspaceTree({
-        projectId: button.dataset.projectId,
-        treeName: button.dataset.treeName,
+      acc.addEventListener('click', function(event) {
+          const target = event.target as Element | null;
+          const button = target ? target.closest('button[data-project-id][data-tree-name]') as HTMLButtonElement | null : null;
+          if (!button) return;
+          (window as any).selectWorkspaceTree({ projectId: button.dataset.projectId, treeName: button.dataset.treeName });
       });
-    });
   }
-  const ref = document.getElementById("workspace-refresh");
-  if (ref) ref.addEventListener("click", () => fetchWorkspaceTreeList(true));
+  const ref = document.getElementById('workspace-refresh');
+  if (ref) ref.addEventListener('click', () => fetchWorkspaceTreeList(true));
+  
+  setTimeout(() => {
+    const calcBtn = document.getElementById("red-calc-btn");
+    if (calcBtn) {
+      calcBtn.addEventListener("click", () => {
+        let rootRedInput = document.getElementById("red-root-value") as HTMLInputElement;
+        let rootRed = parseFloat(rootRedInput.value) || 0;
+        redTree.calculateRED(rootRed);
+      });
+    }
+
+    const scaleBtn = document.getElementById("red-scale-btn");
+    if (scaleBtn) {
+      scaleBtn.addEventListener("click", () => {
+        redTree.useREDAsBranchLengths();
+      });
+    }
+
+    const baselineBtn = document.getElementById("red-baseline-btn");
+    if (baselineBtn) {
+      baselineBtn.addEventListener("click", () => {
+        let baselinesInput = document.getElementById("red-baselines") as HTMLInputElement;
+        let bands = baselinesInput.value.split(",").map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+        redTree.drawREDBands(bands);
+      });
+    }
+
+    const baselineClearBtn = document.getElementById("red-baseline-clear-btn");
+    if (baselineClearBtn) {
+      baselineClearBtn.addEventListener("click", () => {
+        redTree.redBandValues = [];
+        d3.select("#svg-div svg g#maingroup").selectAll(".red-band-group").remove();
+      });
+    }
+  }, 1000);
+
 });
 
-if (queryParams.has("originalJsonDataUri")) {
-  let t = queryParams.get("originalJsonDataUri");
-  showLoadingBox();
-  d3.json(t)
-    .then((t) => {
-      normalTree.importOriginalJsonData(t);
-      removeLoadingBox();
-    })
-    .catch((err) => {
-      showLoadError(err?.message || String(err));
-    });
-} else {
-  removeLoadingBox();
-  showImportHint();
-}
-
-let resizeTimer: number | null = null;
 window.addEventListener("resize", () => {
-  if (resizeTimer) window.clearTimeout(resizeTimer);
-  resizeTimer = window.setTimeout(() => {
-    normalTree.syncCanvasToViewport();
-    if ((normalTree as any).treeHierarchy) {
-      normalTree.init("windowResize");
-    }
-  }, 80);
+  redTree.syncCanvasToViewport();
+  if (redTree.treeHierarchy) {
+    redTree.init("windowResize");
+  }
 });
