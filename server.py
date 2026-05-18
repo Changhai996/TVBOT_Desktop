@@ -5,6 +5,7 @@ import json
 import time
 import secrets
 import logging
+import re
 from datetime import datetime
 import urllib.parse
 
@@ -28,6 +29,19 @@ if not os.path.exists(DATA_DIR):
 
 LAYOUT_STATE_STORE = {}
 LAYOUT_STATE_TTL_SECONDS = 60 * 60
+PLOT_TYPE_RE = re.compile(r'"plotType"\s*:\s*"([^"]+)"')
+
+@app.after_request
+def _no_cache_local_dev(resp):
+    try:
+        p = request.path or ""
+        if p.endswith(".html") or p.endswith(".js") or p.endswith(".css"):
+            resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            resp.headers["Pragma"] = "no-cache"
+            resp.headers["Expires"] = "0"
+    except Exception:
+        pass
+    return resp
 
 def _cleanup_layout_states(now_ts=None):
     now_ts = now_ts if now_ts is not None else time.time()
@@ -64,6 +78,28 @@ def _is_valid_project_name(name):
     if os.path.basename(s) != s:
         return False
     return True
+
+def _read_plot_type_fast(file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as fh:
+            head = fh.read(32768)
+        match = PLOT_TYPE_RE.search(head)
+        if match:
+            return match.group(1)
+    except Exception:
+        pass
+    return 'normalTree'
+
+def _build_tree_entry(file_path, project_id, tree_name):
+    mtime = os.path.getmtime(file_path)
+    formatted_time = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
+    return {
+        "treeName": tree_name,
+        "projectId": project_id,
+        "mtime": mtime,
+        "time_str": formatted_time,
+        "plotType": _read_plot_type_fast(file_path)
+    }
 
 @app.route('/ChiPlot/countUserVisit')
 def count_user_visit():
@@ -123,7 +159,6 @@ def get_tvbot_token():
 
 @app.route('/tvbot/getTreeList')
 def get_tree_list():
-    # Return a mock project list so the built-in UI works
     projects = []
     trees = []
     
@@ -136,70 +171,39 @@ def get_tree_list():
             if entry.is_dir():
                 project_name = entry.name
                 if project_name.lower() == 'default':
-                    # Add trees from default folder to default project
                     for f in os.listdir(entry.path):
                         if f.endswith('.json'):
                             full_path = os.path.join(entry.path, f)
-                            mtime = os.path.getmtime(full_path)
-                            formatted_time = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
-                            plot_type = 'normalTree'
-                            try:
-                                with open(full_path, 'r') as jf:
-                                    data = json.load(jf)
-                                    plot_type = data.get('plotType', 'normalTree')
-                            except:
-                                pass
-                            trees.append({
-                                "treeName": f.replace('.json', ''), 
-                                "projectId": "default",
-                                "mtime": mtime,
-                                "time_str": formatted_time,
-                                "plotType": plot_type
-                            })
+                            trees.append(
+                                _build_tree_entry(
+                                    full_path,
+                                    "default",
+                                    f.replace('.json', '')
+                                )
+                            )
                     continue
                 
-                # Add this directory as a project
                 projects.append({"projectId": project_name, "projectName": project_name, "username": "local-user"})
                 
-                # Scan trees in this project folder
                 for f in os.listdir(entry.path):
                     if f.endswith('.json'):
                         full_path = os.path.join(entry.path, f)
-                        mtime = os.path.getmtime(full_path)
-                        formatted_time = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
-                        plot_type = 'normalTree'
-                        try:
-                            with open(full_path, 'r') as jf:
-                                data = json.load(jf)
-                                plot_type = data.get('plotType', 'normalTree')
-                        except:
-                            pass
-                        trees.append({
-                            "treeName": f.replace('.json', ''), 
-                            "projectId": project_name,
-                            "mtime": mtime,
-                            "time_str": formatted_time,
-                            "plotType": plot_type
-                        })
+                        trees.append(
+                            _build_tree_entry(
+                                full_path,
+                                project_name,
+                                f.replace('.json', '')
+                            )
+                        )
             elif entry.is_file() and entry.name.endswith('.json'):
-                # Files directly in DATA_DIR go into 'default'
                 full_path = entry.path
-                mtime = os.path.getmtime(full_path)
-                formatted_time = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
-                plot_type = 'normalTree'
-                try:
-                    with open(full_path, 'r') as jf:
-                        data = json.load(jf)
-                        plot_type = data.get('plotType', 'normalTree')
-                except:
-                    pass
-                trees.append({
-                    "treeName": entry.name.replace('.json', ''), 
-                    "projectId": "default",
-                    "mtime": mtime,
-                    "time_str": formatted_time,
-                    "plotType": plot_type
-                })
+                trees.append(
+                    _build_tree_entry(
+                        full_path,
+                        "default",
+                        entry.name.replace('.json', '')
+                    )
+                )
             
     return jsonify({
         "projectList": projects,
@@ -254,7 +258,29 @@ def serve_html(filename='tvbot.html'):
         
     # Check if the file exists in src/
     if os.path.exists(os.path.join(app.static_folder, filename)):
-        return send_from_directory(app.static_folder, filename)
+        try:
+            html_path = os.path.join(app.static_folder, filename)
+            with open(html_path, 'r', encoding='utf-8') as f:
+                html = f.read()
+            stamp = 0
+            try:
+                js_path = os.path.join(app.static_folder, 'dist', 'js', 'smart_tvbot.js')
+                if os.path.exists(js_path):
+                    stamp = int(os.path.getmtime(js_path))
+            except Exception:
+                stamp = 0
+            if stamp:
+                import re
+                def _add_v(m):
+                    url = m.group(1)
+                    quote = m.group(2)
+                    if '?' in url:
+                        return m.group(0)
+                    return f'{url}?v={stamp}{quote}'
+                html = re.sub(r'(/static/dist/[^"\']+\.(?:js|css))([\'"])', _add_v, html)
+            return Response(html, mimetype='text/html')
+        except Exception:
+            return send_from_directory(app.static_folder, filename)
     
     # Special case for myTrees.html (we'll provide a local version)
     if filename == 'myTrees.html':

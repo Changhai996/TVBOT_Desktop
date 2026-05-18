@@ -13,6 +13,32 @@ class NormalTree extends MainTree {
       (this.plotType = "normalTree"),
       this.creatVueApp());
   }
+  syncCanvasToViewport() {
+    const canvasScale = this.figureData?.canvas?.["Canvas scale"];
+    const margin = this.figureData?.canvas?.Margin;
+    if (!canvasScale || !margin) return;
+    const controlContainer = document.getElementById("control-container");
+    const toolbarWidth =
+      controlContainer && getComputedStyle(controlContainer).display !== "none"
+        ? Math.ceil(controlContainer.getBoundingClientRect().width)
+        : 0;
+    canvasScale.width.value = Math.max(window.innerWidth, 960);
+    canvasScale.height.value = Math.max(window.innerHeight, 640);
+    margin.top.value = 52;
+    margin.bottom.value = 52;
+    margin.left.value = 80;
+    margin.right.value = Math.max(140, toolbarWidth + 24);
+    if (this.marginDragApp?.$refs?.svgResizebox?.$data) {
+      const resizeData = this.marginDragApp.$refs.svgResizebox.$data;
+      resizeData.width.value = canvasScale.width.value;
+      resizeData.height.value = canvasScale.height.value;
+      resizeData.marginTop.value = margin.top.value;
+      resizeData.marginBottom.value = margin.bottom.value;
+      resizeData.marginLeft.value = margin.left.value;
+      resizeData.marginRight.value = margin.right.value;
+      resizeData.showMarginBox.value = !1;
+    }
+  }
   init(...args: any[]) {
     let [t, a, e] = args;
     if (
@@ -27,6 +53,7 @@ class NormalTree extends MainTree {
           this.styleData.rootOffsetRate,
         )
       );
+    this.syncCanvasToViewport();
     ("attrChanged" == t &&
       "data-source" == a &&
       "Bootstraps" == e &&
@@ -2035,15 +2062,210 @@ class NormalTree extends MainTree {
   }
 }
 const normalTree = ((window as any).normalTree = new NormalTree());
-normalTree.setExampleData(["/static/Ali/data/NJ_tree.treefile"]);
 let queryParams = new URLSearchParams(window.location.search);
+const originalOnLoadNewFile = normalTree.onLoadNewFile;
+normalTree.onLoadNewFile = function (...args: any[]) {
+  document.getElementById("import-hint-overlay")?.remove();
+  return originalOnLoadNewFile.apply(this, args);
+};
+
+function removeLoadingBox() {
+  d3.select("#page-loading-box").remove();
+}
+
+function showLoadingBox(message = "Loading...") {
+  const loadingBox = document.getElementById("page-loading-box");
+  const loadingText = loadingBox?.querySelector("span");
+  if (!loadingBox) return;
+  loadingBox.style.display = "flex";
+  if (loadingText) loadingText.textContent = message;
+}
+
+function showImportHint() {
+  let svgDiv = document.getElementById("svg-div");
+  if (!svgDiv || document.getElementById("import-hint-overlay")) return;
+  let hint = document.createElement("div");
+  hint.id = "import-hint-overlay";
+  hint.style.cssText =
+    "position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #94a3b8; font-size: 1.25rem; pointer-events: none; user-select: none; z-index: 10;";
+  hint.innerHTML =
+    '<i class="bi bi-file-earmark-arrow-up" style="font-size: 2.5rem; display: block; margin-bottom: 0.75rem; color: #3b82f6;"></i>请导入树文件';
+  svgDiv.appendChild(hint);
+}
+
+function showLoadError(message: string) {
+  removeLoadingBox();
+  showImportHint();
+  if ((normalTree as any).showMessageBox) {
+    (normalTree as any).showMessageBox(
+      "cuIcon-roundclose",
+      `Import failed: ${message}`,
+      "error",
+    );
+  }
+}
+
+let workspaceBrowserState = {
+  loading: false,
+  loaded: false,
+  treeList: [] as any[],
+  projectList: [] as any[],
+};
+
+function escapeHtml(value: string) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function renderWorkspaceBrowser() {
+  const container = document.getElementById("workspaceAccordion");
+  if (!container) return;
+  const projects = workspaceBrowserState.projectList || [];
+  const trees = workspaceBrowserState.treeList || [];
+  if (projects.length === 0) {
+    container.innerHTML =
+      '<div class="p-3 text-muted text-center">No projects found in Workspace.</div>';
+    return;
+  }
+  container.innerHTML = projects
+    .map((project: any) => {
+      const projectId = String(project.projectId ?? project.id ?? project.name ?? "");
+      const projectName = escapeHtml(
+        String(project.projectName ?? project.name ?? projectId),
+      );
+      const projectTrees = trees.filter(
+        (item: any) => String(item.projectId) === projectId,
+      );
+      const treeButtons = projectTrees.length
+        ? projectTrees
+            .map((item: any) => {
+              const treeName = String(item.treeName ?? item.name ?? "");
+              return `<button type="button" class="btn btn-sm btn-outline-secondary w-100 text-start" data-project-id="${escapeHtml(
+                projectId,
+              )}" data-tree-name="${escapeHtml(treeName)}">${escapeHtml(treeName)}</button>`;
+            })
+            .join("")
+        : '<div class="text-muted small">No tree files in this project.</div>';
+      return `<details><summary>${projectName}</summary><div class="workspace-tree-list">${treeButtons}</div></details>`;
+    })
+    .join("");
+}
+
+async function fetchWorkspaceTreeList(forceRefresh = false) {
+  if (workspaceBrowserState.loaded && !forceRefresh) {
+    renderWorkspaceBrowser();
+    return;
+  }
+  workspaceBrowserState.loading = true;
+  const container = document.getElementById("workspaceAccordion");
+  if (container) {
+    container.innerHTML =
+      '<div class="p-3 text-center text-muted"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Loading workspace...</div>';
+  }
+  try {
+    const res = await fetch("/tvbot/getTreeList");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    workspaceBrowserState.treeList = Array.isArray(data.treeList)
+      ? data.treeList
+      : [];
+    workspaceBrowserState.projectList = Array.isArray(data.projectList)
+      ? data.projectList
+      : [];
+    workspaceBrowserState.loaded = true;
+  } catch (err: any) {
+    if (container) {
+      container.innerHTML = `<div class="p-3 text-danger text-center">Failed to load: ${escapeHtml(
+        err?.message || String(err),
+      )}</div>`;
+    }
+    workspaceBrowserState.loaded = false;
+    return;
+  } finally {
+    workspaceBrowserState.loading = false;
+  }
+  renderWorkspaceBrowser();
+}
+
+(window as any).openWorkspaceModal = function () {
+  const modalEl = document.getElementById("workspaceModal");
+  if (!modalEl || !(window as any).bootstrap?.Modal) return;
+  const modal = new (window as any).bootstrap.Modal(modalEl);
+  modal.show();
+  fetchWorkspaceTreeList(false);
+};
+
+(window as any).selectWorkspaceTree = async function (dataObj: any) {
+  const { projectId, treeName } = dataObj || {};
+  const modalEl = document.getElementById("workspaceModal");
+  try {
+    const dataUrl = `/api/get_tree/${encodeURIComponent(projectId)}/${encodeURIComponent(treeName)}.json`;
+    if (modalEl) {
+      const modal = (window as any).bootstrap?.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.set("originalJsonDataUri", dataUrl);
+    url.searchParams.set("projectId", String(projectId));
+    url.searchParams.set("treeTitle", String(treeName));
+    try {
+      (window as any).__tvbot_skip_beforeunload = true;
+      sessionStorage.setItem("tvbot_skip_beforeunload_once", "1");
+    } catch (_err) {}
+    window.location.href = url.toString();
+  } catch (err: any) {
+    showLoadError(err?.message || String(err));
+  }
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  const acc = document.getElementById("workspaceAccordion");
+  if (acc) {
+    acc.addEventListener("click", function (event) {
+      const target = event.target as Element | null;
+      const button = target
+        ? (target.closest(
+            "button[data-project-id][data-tree-name]",
+          ) as HTMLButtonElement | null)
+        : null;
+      if (!button) return;
+      (window as any).selectWorkspaceTree({
+        projectId: button.dataset.projectId,
+        treeName: button.dataset.treeName,
+      });
+    });
+  }
+  const ref = document.getElementById("workspace-refresh");
+  if (ref) ref.addEventListener("click", () => fetchWorkspaceTreeList(true));
+});
+
 if (queryParams.has("originalJsonDataUri")) {
   let t = queryParams.get("originalJsonDataUri");
-  d3.json(t).then((t) => {
-    (normalTree.importOriginalJsonData(t),
-      d3.select("#page-loading-box").remove());
-  });
-} else
-  d3.text("/static/Ali/data/NJ_tree.treefile").then(function (t) {
-    ((normalTree as any).onLoadNewFile(t), d3.select("#page-loading-box").remove());
-  });
+  showLoadingBox();
+  d3.json(t)
+    .then((t) => {
+      normalTree.importOriginalJsonData(t);
+      removeLoadingBox();
+    })
+    .catch((err) => {
+      showLoadError(err?.message || String(err));
+    });
+} else {
+  removeLoadingBox();
+  showImportHint();
+}
+
+let resizeTimer: number | null = null;
+window.addEventListener("resize", () => {
+  if (resizeTimer) window.clearTimeout(resizeTimer);
+  resizeTimer = window.setTimeout(() => {
+    normalTree.syncCanvasToViewport();
+    if ((normalTree as any).treeHierarchy) {
+      normalTree.init("windowResize");
+    }
+  }, 80);
+});

@@ -152,10 +152,17 @@ class MainTree extends MainPlot {
   creatVueApp() {
     const c = this;
     let { xAxis: e, yAxis: t, ...a } = this.figureData;
-    ((this.figureData.data.treefile["select-file"].helpLink =
-      "https://1996xjm.github.io/tvbot/user_interface/attribute_main/data.html"),
-      (this.figureData = a),
-      (this.figureData.data.treefile["copy-leavesID"] = {
+    const treeDataGroup =
+      this.figureData.data["Import tree"] ||
+      this.figureData.data.treefile ||
+      (this.figureData.data.treefile = {});
+    const localImportControl =
+      treeDataGroup?.["Local file"] || treeDataGroup?.["select-file"];
+    localImportControl &&
+      (localImportControl.helpLink =
+        "https://1996xjm.github.io/tvbot/user_interface/attribute_main/data.html");
+    ((this.figureData = a),
+      (treeDataGroup["copy-leavesID"] = {
         type: "button",
         value: "",
         event: "viewNodesId",
@@ -165,7 +172,7 @@ class MainTree extends MainPlot {
         helpLink:
           "https://1996xjm.github.io/tvbot/user_interface/attribute_main/data.html",
       }),
-      (this.figureData.data.treefile["copy-internalID"] = {
+      (treeDataGroup["copy-internalID"] = {
         type: "button",
         value: "",
         event: "viewInternalNodesId",

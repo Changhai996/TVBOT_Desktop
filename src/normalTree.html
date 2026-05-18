@@ -31,16 +31,16 @@
 
 <body>
 
-<div id="app2">
+<div id="app2" style="display: none;">
     <svg-resizebox  ref="svgResizebox"  ></svg-resizebox>
 
 </div>
 
-<div id="svg-div" style="position: absolute;left: 0px;">
+<div id="svg-div" style="position: fixed; left: 0px; top: 0px; width: 100vw; height: 100vh; overflow: hidden; background-color: #ffffff;">
 
 
     <!--    外面要套一层div才能被html2canvas识别    -->
-    <svg  id="svg" ></svg>
+    <svg id="svg" style="width: 100%; height: 100%;"></svg>
 
 </div>
 <div id="layout_phylotree_context_menu_app">
@@ -65,11 +65,32 @@
 
     </div>
 </div>
+<div class="modal fade" id="workspaceModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable workspace-modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Tree JSON from Workspace</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="workspace-toolbar">
+                <button id="workspace-refresh" type="button" class="btn btn-sm btn-outline-primary">Refresh</button>
+            </div>
+            <div class="modal-body p-0" id="workspace-modal-body">
+                <div class="accordion accordion-flush" id="workspaceAccordion">
+                    <div class="p-3 text-center text-muted">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                        Loading workspace...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <div id="app" style="overflow: hidden;" v-cloak>
     <control-plane  ref="controlPlane" :cindex="currentControlListIndex" ></control-plane>
     <layer-plane ref="layerPlane"></layer-plane>
 </div>
-<div class="page-loading" id="page-loading-box" style="position:absolute;width:100%;display: flex;justify-content: center;top: 300px;flex-direction: column;">
+<div class="page-loading" id="page-loading-box" style="position:absolute;width:100%;display: none;justify-content: center;top: 300px;flex-direction: column;">
     <span style="text-align: center;color: white;">Loading...</span>
 </div>
 <div id="project-manager-app" v-cloak>
@@ -81,6 +102,7 @@
 
 
 </body>
+<script src="/static/js/bootstrap.bundle.min.js"></script>
 <script type="module" src="/static/dist/js/local_storage_handler.js"></script>
 <script type="module" src="/static/dist/js/smart_tvbot.js"></script>
 <script type="module" src="/static/dist/js/normalTree.js"></script>

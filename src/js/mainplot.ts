@@ -55,12 +55,7 @@ const eagleMapContainer_T = `<div id="eagleMapContainer"  :style="{width: width.
     <div id="control-container"  style="display: flex;flex-direction: column;min-width:350px;max-width: 450px;position: fixed;right: 0px;border-radius: 4px;overflow: hidden;z-index: 190;">
         <div id="attr-container-header"  class="xiaochi-background" style="display: flex;justify-content: space-between;align-items: center;">
         <div id="hide-control-container-btn" :class="{'cuIcon-unfold': isControlContainerShow,'cuIcon-fold':!isControlContainerShow}"  @click="hideControlContainer"></div>
-        <div style="height: 100%;display: flex;align-items: center;">
-        
-        <label v-show="isControlContainerShow" style="margin-right: 5px;color: white;">中文</label>
-               <input v-show="isControlContainerShow"  type="checkbox"  class="a-switch"  style="display: inline-block;margin-right: 5px;"  @change="changeLanguage">
- 
-</div>
+        <div style="height: 100%;display: flex;align-items: center;"></div>
 
         </div>
 <div  class="mynav-horizontal" >
@@ -929,39 +924,30 @@ class MainPlot {
       (this.figureDataType = e),
       (this.figureData = {
         data: {
-          [e]: {
-            "select-file": {
-              type: "file",
-              value: "",
-              iconClass: "cuIcon-file",
-            },
-            view: {
+          "Import tree": {
+            "Local file": {
               type: "button",
-              value: "",
-              event: "viewMainData",
-              isBGGray: !0,
-              isFresh: !1,
-              iconClass: "cuIcon-attentionfill",
-            },
-          },
-          "Restore drawing state": {
-            "select-file": {
-              type: "button",
-              value: "",
-              event: "importOriginalJsonData",
+              value: "Select",
+              event: "openLocalTreeImport",
               isLoading: !1,
               isFresh: !1,
               iconClass: "cuIcon-file",
             },
-          },
-          "Example data": {
-            view: {
+            Workspace: {
               type: "button",
-              value: "",
-              event: "viewEexampleData",
-              isLoading: !1,
+              value: "Browse",
+              event: "openWorkspaceImport",
               isFresh: !1,
-              iconClass: "cuIcon-attentionfill",
+              iconClass: "cuIcon-folder",
+            },
+          },
+          Zooming: {
+            reset: {
+              type: "button",
+              value: "Reset",
+              event: "resetZooming",
+              isFresh: !1,
+              iconClass: "cuIcon-refresh",
             },
           },
         },
@@ -1162,12 +1148,10 @@ class MainPlot {
     ].map((e) => {
       return { name: e, dataImage: this.ramp("h", d3[e]) };
     });
-    (this.plotType.includes("Tree") &&
-      ((this.figureData.data["Restore drawing state"]["select-file"].helpLink =
-        "https://1996xjm.github.io/tvbot/user_interface/attribute_main/data.html#restore-drawing-state"),
+    this.plotType.includes("Tree") &&
       (this.figureData.export["Save drawing state"].save.helpLink =
-        "https://1996xjm.github.io/tvbot/user_interface/attribute_main/export.html")),
-      (this.appData = {
+        "https://1996xjm.github.io/tvbot/user_interface/attribute_main/export.html");
+    this.appData = {
         figureData: f.figureData,
         controlList: [f.dictToControlList(f.figureData)],
         controlDataList: [f.figureData],
@@ -1181,8 +1165,8 @@ class MainPlot {
         colorIndex: 33,
         isControlContainerShow: !0,
         navHList: ["main", "layer"],
-      }),
-      (this.handleClickMethods = {
+      };
+    this.handleClickMethods = {
         chooseColor: function () {
           d3.select("#color-select")
             .raise()
@@ -1217,6 +1201,16 @@ class MainPlot {
             .call(f.zoom.transform, d3.zoomIdentity)
             .on("dblclick.zoom", null);
         },
+        openLocalTreeImport: function () {
+          this.addFile();
+        },
+        openWorkspaceImport: function () {
+          if (typeof (window as any).openWorkspaceModal === "function") {
+            (window as any).openWorkspaceModal();
+          } else {
+            f.showMessageBox("cuIcon-roundclose", "Workspace browser is not ready yet.", "error");
+          }
+        },
         viewEexampleData: function () {
           window.open(
             `/static/xiaochiPlot/src/exampleData.html?dataUrlArr=${JSON.stringify(f.exampleDataArr)}`,
@@ -1231,8 +1225,8 @@ class MainPlot {
         importOriginalJsonData: function () {
           f.importOriginalJsonData();
         },
-      }),
-      (this.EventHandling = {
+      };
+    this.EventHandling = {
         data() {
           return f.appData;
         },
@@ -1335,8 +1329,7 @@ class MainPlot {
             }
             (f.OpenFilePickerOptions.multiple
               ? f.onLoadNewFile(i, "local", l)
-              : f.onLoadNewFile(i[0], "local", l[0]),
-              (this.figureData.data[f.figureDataType].view.isBGGray = !1));
+              : f.onLoadNewFile(i[0], "local", l[0]));
           },
           saveFigure: function () {
             var e =
@@ -1555,7 +1548,7 @@ class MainPlot {
         },
         template: controlPlane_T,
         props: ["cindex"],
-      }));
+      };
     let p = "app2";
     this.EventHandling1 = {
       data() {
@@ -1716,17 +1709,17 @@ class MainPlot {
     let t = Vue.createApp({})
       .component("svg-resizebox", this.EventHandling1)
       .mount("#app2");
-    ((this.marginDragApp = t),
-      (this.Vue = Vue.createApp({
-        data() {
-          return { currentControlListIndex: 0 };
-        },
-      })
-        .component("control-plane", this.EventHandling)
-        .component("layer-plane", this.layerComponent.createVUELayerComponent())
-        .mount("#app")),
-      (this.layerPlaneData = this.Vue.$refs.layerPlane.$data),
-      (d3.select("body").node().ondblclick = function (e) {
+    this.marginDragApp = t;
+    this.Vue = Vue.createApp({
+      data() {
+        return { currentControlListIndex: 0 };
+      },
+    })
+      .component("control-plane", this.EventHandling)
+      .component("layer-plane", this.layerComponent.createVUELayerComponent())
+      .mount("#app");
+    this.layerPlaneData = this.Vue.$refs.layerPlane.$data;
+    d3.select("body").node().ondblclick = function (e) {
         (console.log(e),
           [
             d3.select("body").node(),
@@ -1744,21 +1737,21 @@ class MainPlot {
             t.$refs.svgResizebox.$data.showMarginBox.value
               ? d3.select("#app2").raise()
               : d3.select("#app2").lower()));
-      }),
-      [
-        "networkPlot",
-        "groupErrorLinePlot",
-        "groupErrorBarPlot",
-        "groupBoxPlot",
-      ].includes(this.plotType) &&
-        this.showYesOrNoMessageBox(
-          "功能更新提示",
-          `
+      };
+    [
+      "networkPlot",
+      "groupErrorLinePlot",
+      "groupErrorBarPlot",
+      "groupBoxPlot",
+    ].includes(this.plotType) &&
+      this.showYesOrNoMessageBox(
+        "功能更新提示",
+        `
 <h6 style="text-align: center;" >数据文件支持仅导入一个带多sheet的Excel文件啦</h6>
 <a href="https://www.bilibili.com/video/BV1ja41187NQ/" target="_blank">点击观看详细演示视频</a>
 `,
-          void 0,
-        ));
+        void 0,
+      );
   }
   setExampleData(e = []) {
     this.exampleDataArr = e;
@@ -1983,10 +1976,7 @@ class MainPlot {
         (this.Vue.$refs.controlPlane.$data.controlDataList[0] =
           this.figureData),
         this.marginDragApp.$refs.svgResizebox.$forceUpdate(),
-        (this.originalData.mainDataArr = i.originalData.mainDataArr),
-        (this.Vue.$refs.controlPlane.$data.figureData.data[
-          this.figureDataType
-        ].view.isBGGray = !1));
+        (this.originalData.mainDataArr = i.originalData.mainDataArr));
       let e = void 0;
       ((e = this.OpenFilePickerOptions.multiple
         ? this.onLoadNewFile(t, "originalJsonData", a)

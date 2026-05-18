@@ -217,12 +217,17 @@ svg{
     background-color: var(--bs-orange);
     border: none !important;
     color: white;
-    height: 26px;
-    line-height: 26px;
-    width: 40px;
+    height: 30px;
+    line-height: 30px;
+    min-width: 40px;
+    padding: 0 10px;
     border-radius: 4px;
     animation-delay: 0.1s;
     text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
 }
 .mybutton:active{
     transform: translate(1px,1px);
@@ -453,38 +458,41 @@ input[type="color"]{
 }
 
 .a-switch{
-    width: 40px;
-    height: 18px;
-    border-radius: 20px;
+    width: 46px;
+    height: 24px;
+    border-radius: 999px;
+    appearance: none;
     -webkit-appearance: none;
     user-select: none;
     outline: none;
-    background-color: #e0e0e0;
-    box-shadow: #c2c2c2 0 0 0 0 inset;
+    background-color: #d1d5db;
+    box-shadow: inset 0 0 0 1px #cbd5e1;
     position: relative;
-    transition:0.4s;
+    transition:0.25s ease;
     cursor: pointer;
     border: none;
+    vertical-align: middle;
+    box-sizing: border-box;
 }
 .a-switch:before{
     content: '';
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     border-radius: 100%;
     background-color: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.28);
     position: absolute;
-    left:0;
-
-    transition:0.3s;
+    left:2px;
+    top:2px;
+    transition:0.25s ease;
 }
 .a-switch:checked{
     border-color: var(--bs-orange);
-    box-shadow: var(--bs-orange) 0 0 0 14px inset;
+    box-shadow: var(--bs-orange) 0 0 0 24px inset;
     background-color: var(--bs-orange);
 }
 .a-switch:checked:before{
-    left:22px;
+    left:24px;
 }
 
 .numInputLabel{
